@@ -1,9 +1,33 @@
 // Sends the compiled support ticket to the configured support address.
-// Uses the Resend API (https://resend.com) — free tier works without a
-// domain for the signup mailbox. Returns true only on provider success.
-export async function sendSupportEmail({ to, subject, body, replyTo }) {
+// Path 1: Resend API directly when RESEND_API_KEY is set locally.
+// Path 2: the deployed Supabase edge function send-support-email,
+//         which holds its own RESEND_API_KEY secret.
+// Returns { sent: true } only on provider success.
+export async function sendSupportEmail({ to, subject, body, replyTo, supabase }) {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return { sent: false, reason: 'no_api_key' };
+  if (key) return sendViaResend({ key, to, subject, body, replyTo });
+
+  // Fall back to the edge function (it owns the RESEND_API_KEY secret).
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-support-email', {
+        body: { subject, body, replyTo },
+      });
+      if (error) {
+        console.error('Edge function error:', error.message);
+        return { sent: false, reason: 'edge_error' };
+      }
+      if (data?.sent) return { sent: true };
+      return { sent: false, reason: data?.reason || 'edge_failed' };
+    } catch (e) {
+      console.error('Edge invoke failed:', e.message);
+      return { sent: false, reason: 'edge_network' };
+    }
+  }
+  return { sent: false, reason: 'no_api_key' };
+}
+
+async function sendViaResend({ key, to, subject, body, replyTo }) {
 
   try {
     const res = await fetch('https://api.resend.com/emails', {

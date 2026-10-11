@@ -269,6 +269,7 @@ app.post('/api/chat/escalate', async (req, res) => {
     subject,
     body,
     replyTo: email,
+    supabase,
   });
 
   res.json({ ok: true, ticket, subject, emailSent: sent, to: sent ? supportTo : undefined, emailReason: reason });
