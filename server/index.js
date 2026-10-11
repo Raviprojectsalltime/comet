@@ -4,6 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import { answer, buildEscalationEmail } from './chat.js';
+import { llmReply } from './ai.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -155,8 +156,41 @@ app.post('/api/newsletter', async (req, res) => {
 // approved knowledge-base content. It never invents answers —
 // unmatched queries return offerEscalation so the UI can escalate.
 app.post('/api/chat', async (req, res) => {
-  const { message, history = [], product = null } = req.body || {};
+  const { message, history = [], product = null, email = null } = req.body || {};
   const result = answer({ message, history, product });
+
+  // Fetch the customer's orders so the LLM can reference verified data.
+  let orders = [];
+  if (email && supabase) {
+    try {
+      const { data } = await supabase
+        .from('orders')
+        .select('items,total,created_at')
+        .eq('email', email)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      orders = data || [];
+    } catch { /* ignore — orders table may not exist */ }
+  }
+
+  // When the engine found grounded knowledge, let the LLM phrase the
+  // answer naturally using ONLY that approved content + customer data.
+  // Unknown/escalation replies stay rule-based (never invented).
+  if (result.articleId || result.category === 'greeting' || result.category === 'thanks') {
+    const article = result.articleId
+      ? JSON.parse(fs.readFileSync(path.join(__dirname, 'knowledge.json'), 'utf-8'))
+          .find((a) => a.id === result.articleId)
+      : null;
+    const llm = await llmReply({
+      article,
+      message,
+      history,
+      product,
+      orders,
+      email,
+    }).catch(() => null);
+    if (llm) result.reply = llm;
+  }
 
   // Best-effort log of the conversation (does not affect the reply).
   if (supabase) {
