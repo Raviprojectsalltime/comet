@@ -1,0 +1,146 @@
+[
+  {
+    "id": "water-damage",
+    "title": "Water exposure & wet-shoe damage",
+    "category": "Water Damage",
+    "keywords": ["wet", "water", "rain", "soaked", "drenched", "puddle", "moisture", "damp", "drying", "tear", "tearing"],
+    "answer": "If your Comets got wet, act quickly: remove the laces and insoles, stuff the shoes with newspaper or a dry towel, and let them air-dry at room temperature away from direct sunlight and heaters — heat can weaken adhesives and warp materials. Once dry, check the fabric and stitching. If the material has torn or the stitching has opened after water exposure, this needs a closer look from our support team.",
+    "followUp": "Did the damage happen after the shoes got wet, or was it already there?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "material-texture",
+    "title": "Material & texture concerns",
+    "category": "Material Issue",
+    "keywords": ["rough", "smooth", "texture", "peeling", "peel", "hard", "stiff", "material", "surface", "fabric", "different", "expected"],
+    "answer": "Some texture change is normal as the shoe breaks in — canvas and knit uppers soften with wear, while suede and coated panels can feel firmer in cold or humid weather. If the surface is peeling, cracking, or feels noticeably different from what was advertised, that's worth checking. Light brushing with a dry shoe brush can restore the texture of suede and canvas.",
+    "followUp": "Which part is affected — the fabric upper, the overlays, or the sole trim?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "color-fading",
+    "title": "Colour fading & discolouration",
+    "category": "Colour Issue",
+    "keywords": ["fade", "fading", "colour", "color", "bleed", "bleeding", "discolour", "patch", "patches", "marks", "changed"],
+    "answer": "Minor colour settling is normal in the first few wears, especially on rich dyes. To protect the colour: keep the shoes away from prolonged direct sunlight, avoid bleach or strong detergents, and clean with a damp cloth only. If colour is bleeding onto socks or you see white patches appearing, stop wearing them in wet conditions and let us take a look — that can indicate a dye or finishing issue.",
+    "followUp": "Did the fading start after the shoes got wet or after cleaning?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "mould-fungus",
+    "title": "Mould or fungus-like growth",
+    "category": "Mould / Odour",
+    "keywords": ["fungus", "mould", "mold", "mildew", "smell", "odor", "odour", "green", "substance", "stored", "storage"],
+    "answer": "White or green patches are most often mildew from storing damp shoes — treat it as possible growth, not a confirmed defect. Take the shoes outside, brush off the patches with a dry brush, wipe with a cloth lightly dampened with a water-and-white-vinegar mix (1:1), and air-dry completely. Never store shoes damp, and use silica gel or newspaper inside if your home is humid. Do not use bleach or harsh chemicals — they damage the materials.",
+    "followUp": "Were the shoes stored while damp, or in a humid place?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "cleaning",
+    "title": "Cleaning & washing instructions",
+    "category": "Cleaning",
+    "keywords": ["clean", "cleaning", "wash", "washing", "detergent", "dirty", "stain", "machine", "scrub", "soap", "dirt"],
+    "answer": "Never machine-wash or soak your Comets — it breaks down the adhesives. For canvas/knit uppers: a soft brush or cloth with mild soap and cold water, then air-dry. For suede panels: a dry suede brush only, no water. For the midsole and outsole: a damp cloth with mild soap works fine. Remove the laces and wash them separately by hand.",
+    "followUp": "Which part do you need to clean — the fabric upper or the sole?",
+    "escalateIfUnresolved": false
+  },
+  {
+    "id": "sole-structure",
+    "title": "Sole, stitching & structural issues",
+    "category": "Structural Issue",
+    "keywords": ["sole", "stitch", "stitching", "crack", "cracking", "separating", "separated", "shape", "glue", "came off", "detached"],
+    "answer": "A sole separating, cracking, or stitching coming apart within normal use is not something home repair should tackle — glues available over the counter can damage the shoe further and complicate any claim. Photograph the affected area clearly, stop wearing the pair, and let our support team review it — this may qualify under our product-quality review.",
+    "followUp": "How long have you had the pair, and when did you first notice it?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "fit-size",
+    "title": "Fit, size & comfort",
+    "category": "Fit & Comfort",
+    "keywords": ["tight", "fit", "size", "sizing", "hurt", "uncomfortable", "loose", "small", "big", "narrow", "wide", "pain"],
+    "answer": "Comets run true to UK size. If you're between sizes we recommend going half a size up. New pairs can feel snug for the first 2–3 wears while the materials break in — try loosening the laces fully before deciding. If it's genuinely the wrong size, we offer easy 7-day returns and exchanges on unworn pairs, so you can swap to the right size.",
+    "followUp": "Is it tight across the width, or short in the toe?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "arrived-damaged",
+    "title": "Arrived damaged / manufacturing defect",
+    "category": "Damaged Product",
+    "keywords": ["arrived", "defect", "defective", "damaged", "torn", "rip", "ripped", "broke", "broken", "box", "packaging"],
+    "answer": "Sorry — a pair that arrives damaged or develops a defect shortly after purchase is on us to look at. Please upload a clear photo of the issue, keep the box and tags, and share your order number. Our team reviews damage claims and will arrange a replacement or refund where applicable. You can also start a request directly under 'Returns and Exchanges' in the footer.",
+    "followUp": "Could you upload a photo showing the damage? You can use the attachment button below.",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "product-mismatch",
+    "title": "Wrong product / not as described",
+    "category": "Product Mismatch",
+    "keywords": ["different", "wrong", "mismatch", "received", "ordered", "expected", "described", "website", "another", "instead"],
+    "answer": "If the pair you received is a different colour, size, or model from what you ordered, we'll make it right. Check the name on the box label against your order confirmation, and share your order number — our team will verify against the catalog and arrange an exchange or return. Mismatch issues are covered under our returns policy at no cost to you.",
+    "followUp": "What's the name and colour on your box label versus what you ordered?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "delivery-tracking",
+    "title": "Order tracking & delivery",
+    "category": "Delivery",
+    "keywords": ["deliver", "delivery", "track", "tracking", "where", "delayed", "shipping", "shipped", "package", "dispatch", "courier", "arrive", "status"],
+    "answer": "You can track your order any time from the 'Track your Order' link in the website footer using your order ID or registered mobile number. Orders typically dispatch within 24–48 hours and take 3–7 business days depending on your pin code. If tracking hasn't updated in over 48 hours or shows delivered but nothing arrived, let our team check the carrier directly.",
+    "followUp": "Does your tracking page show any recent scan, or is it stuck on one status?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "returns-refunds",
+    "title": "Returns, exchanges & refunds",
+    "category": "Returns & Refunds",
+    "keywords": ["return", "exchange", "refund", "money", "cancel", "swap", "size exchange", "moneyback"],
+    "answer": "We offer easy 7-day returns and exchanges on unworn pairs in original packaging. Start one from 'Returns and Exchanges' in the footer — once the pickup is done and the pair passes a quick quality check, refunds are processed to the original payment method within 5–7 business days. Exchanges for a different size are the fastest option if you just need a different fit.",
+    "followUp": "Is this for a refund, or a size/style exchange?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "cancel-address",
+    "title": "Cancel order / change address",
+    "category": "Order Changes",
+    "keywords": ["cancel", "cancellation", "address", "change", "edit", "modify", "pincode", "pin code"],
+    "answer": "Orders can be cancelled or the delivery address corrected before they ship — usually within the first 12–24 hours. Share your order number and I'll flag it to the support team right away, or use 'Track your Order' in the footer to check whether it has already been dispatched. Once shipped, cancellation isn't possible, but you can refuse delivery or use the 7-day return.",
+    "followUp": "What's your order number? I can note it for the support team.",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "missing-wrong-item",
+    "title": "Missing, wrong, or damaged items in delivery",
+    "category": "Delivery Issue",
+    "keywords": ["missing", "item", "wrong size", "wrong colour", "wrong color", "empty", "box damaged", "package damaged"],
+    "answer": "If your package arrived with a missing item, the wrong size/colour, or visible damage, we'll sort it out. Keep the outer packaging, take a photo of what you received (and of the box if it's damaged), and share your order number. Our team will verify and arrange the correct replacement or a refund.",
+    "followUp": "Could you share your order number and what exactly was wrong with the shipment?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "payment-refund-query",
+    "title": "Payment & refund status",
+    "category": "Payment",
+    "keywords": ["payment", "paid", "charged", "deducted", "refund status", "upi", "card", "transaction", "debited"],
+    "answer": "If a payment was deducted but the order didn't confirm, the amount is usually auto-reversed by your bank within 5–7 business days — no action needed. For an order-level refund status, share your order number and I'll have the team verify it in the payment system. We never ask for card details or OTPs over chat.",
+    "followUp": "Was the amount deducted but no order confirmation received, or is this a refund that's pending?",
+    "escalateIfUnresolved": true
+  },
+  {
+    "id": "shoe-care",
+    "title": "Shoe care & maintenance",
+    "category": "Care",
+    "keywords": ["care", "maintain", "protect", "store", "storage", "waterproof", "spray", "preserve", "lace"],
+    "answer": "A little care goes a long way: rotate your pairs rather than wearing the same shoes daily, keep them dry, store them in a ventilated spot (not sealed plastic), and use a dry brush to remove surface dust after each wear. A light sneaker-protector spray on canvas and suede helps repel water and stains — apply to clean, dry shoes and re-apply monthly.",
+    "followUp": "Anything specific you're trying to protect — colour, suede panels, or the sole?",
+    "escalateIfUnresolved": false
+  },
+  {
+    "id": "product-info",
+    "title": "Product info & recommendations",
+    "category": "Product Question",
+    "keywords": ["price", "cost", "buy", "pre-order", "preorder", "hukum", "new", "launch", "recommend", "which", "compare", "drop"],
+    "answer": "Happy to help you pick! X Lows start at ₹4,299, Aeon V2 at ₹4,499, Aeres at ₹5,299, and the Hukum designer drop is ₹5,899 (final batch pre-orders open now). You can also use the Search at the top — describe what you need like 'party wear' or 'sport + daily' and it'll pull the right pairs. Anything specific you're shopping for?",
+    "followUp": null,
+    "escalateIfUnresolved": false
+  }
+]

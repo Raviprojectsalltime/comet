@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import { answer, buildEscalationEmail } from './chat.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -148,45 +149,100 @@ app.post('/api/newsletter', async (req, res) => {
   }
 });
 
-// Simple rule-based chatbot endpoint for the Help widget.
+// ---------- Support chatbot ----------
+// Context-aware: client sends the message, recent history and the
+// selected product; the engine classifies intent and retrieves
+// approved knowledge-base content. It never invents answers —
+// unmatched queries return offerEscalation so the UI can escalate.
 app.post('/api/chat', async (req, res) => {
-  const message = String(req.body?.message || '').toLowerCase();
-  let reply =
-    "Thanks for reaching out! A Comet crew member will get back to you soon. Meanwhile, try asking about orders, sizes, or the Hukum drop.";
-
-  if (/(track|order|shipping|delivery)/.test(message)) {
-    reply =
-      'You can track your order from the "Track your Order" link in the footer, or share your order ID here and I will look into it.';
-  } else if (/(size|fit|sizing)/.test(message)) {
-    reply =
-      'Comets run true to size. If you are between sizes, we recommend going half a size up. All sizes are UK sizes.';
-  } else if (/(return|exchange|refund)/.test(message)) {
-    reply =
-      'We offer easy 7-day returns and exchanges. Head to "Returns and Exchanges" in the footer to start one.';
-  } else if (/(hukum|pre-?order|drop)/.test(message)) {
-    reply =
-      'Hukum is our Designer Special drop — the first batch sold out in hours! Pre-orders for the final batch are open now at ₹5,899.';
-  } else if (/(price|cost|discount|offer)/.test(message)) {
-    reply =
-      'X Lows start at ₹4,299, Aeres at ₹5,299 and Astra at ₹4,899. Keep an eye on The Vault for exclusive prices.';
-  } else if (/(hi|hello|hey|namaste)/.test(message)) {
-    reply = 'Hey Cometeer! How can I help you today?';
-  } else if (/(contact|human|support|agent)/.test(message)) {
-    reply =
-      'You can reach us on WhatsApp at +91 9606081463 or email hello@wearcomet.com. Anything else I can help with?';
-  }
+  const { message, history = [], product = null } = req.body || {};
+  const result = answer({ message, history, product });
 
   // Best-effort log of the conversation (does not affect the reply).
   if (supabase) {
     supabase
       .from('chat_messages')
-      .insert({ message: req.body?.message, reply })
+      .insert({ message, reply: result.reply })
       .then(({ error }) => {
         if (error && !isMissingTable(error)) console.error('Chat log error:', error.message);
       });
   }
 
-  res.json({ reply });
+  res.json(result);
+});
+
+// Escalate an unresolved conversation to customer support.
+// Only confirms after the ticket is actually persisted.
+app.post('/api/chat/escalate', async (req, res) => {
+  const { email, product = null, history = [], category } = req.body || {};
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email || ''))) {
+    return res.status(400).json({ error: 'A valid email is required for follow-up' });
+  }
+  const { ticket, subject, body } = buildEscalationEmail({
+    email,
+    product,
+    history,
+    category,
+  });
+
+  if (supabase) {
+    const { error } = await supabase
+      .from('support_tickets')
+      .insert({ ticket, email, subject, body, category: category || null });
+    if (error && !isMissingTable(error)) {
+      console.error('Ticket insert error:', error.message);
+    }
+    if (error && isMissingTable(error)) {
+      // Fallback: keep the escalation in chat_messages so nothing is lost.
+      await supabase
+        .from('chat_messages')
+        .insert({ message: `[ESCALATION ${ticket}] ${subject}`, reply: body });
+    }
+  } else {
+    console.log(`--- ESCALATION ${ticket} ---\n${subject}\n${body}`);
+  }
+
+  res.json({ ok: true, ticket, subject });
+});
+
+// Store the post-resolution satisfaction rating.
+app.post('/api/chat/rating', async (req, res) => {
+  const rating = Number(req.body?.rating);
+  const feedback = String(req.body?.feedback || '');
+  if (!rating || rating < 1 || rating > 5) {
+    return res.status(400).json({ error: 'Rating must be 1–5' });
+  }
+  if (supabase) {
+    const { error } = await supabase
+      .from('chat_ratings')
+      .insert({ rating, feedback });
+    if (error && isMissingTable(error)) {
+      await supabase
+        .from('chat_messages')
+        .insert({ message: `[RATING] ${rating}/5`, reply: feedback });
+    }
+  }
+  res.json({ ok: true });
+});
+
+// Orders for a customer email — used by the chatbot to show
+// purchased products for logged-in customers.
+app.get('/api/orders', async (req, res) => {
+  const email = String(req.query.email || '').trim();
+  if (!email || !supabase) return res.json([]);
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('email', email)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e) {
+    if (!isMissingTable(e)) console.error('Orders fetch error:', e.message);
+    res.json([]);
+  }
 });
 
 // Health check for the Supabase connection + required tables.

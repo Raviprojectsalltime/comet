@@ -1352,6 +1352,110 @@ a {
   letter-spacing: 0.5px;
 }
 
+.chat-attach {
+  font-size: 17px;
+  padding: 0 4px 0 14px !important;
+  color: var(--muted) !important;
+}
+
+.chat-followup {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.chat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0 6px;
+  align-items: center;
+}
+
+.chat-ask {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  width: 100%;
+}
+
+.chat-chip {
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 8px 14px;
+  background: #fff;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chat-chip:hover {
+  background: var(--text);
+  color: #fff;
+}
+
+.chat-chip.dark {
+  background: var(--text);
+  color: #fff;
+}
+
+.chat-chip.dark:hover {
+  background: var(--comet-red);
+}
+
+.chat-img {
+  padding: 4px;
+}
+
+.chat-img img {
+  max-width: 180px;
+  border-radius: 10px;
+  display: block;
+}
+
+.chat-escalate {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 4px;
+}
+
+.chat-escalate p {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.chat-email {
+  width: 100%;
+  font-size: 13px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  margin-bottom: 10px;
+}
+
+.chat-rating .stars {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 10px;
+}
+
+.chat-rating .stars button {
+  font-size: 28px;
+  color: #ddd;
+  transition: color 0.1s, transform 0.1s;
+}
+
+.chat-rating .stars button:hover {
+  color: var(--comet-gold);
+  transform: scale(1.15);
+}
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;

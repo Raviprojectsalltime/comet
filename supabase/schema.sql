@@ -41,6 +41,39 @@ create table if not exists orders (
   created_at timestamptz default now()
 );
 
+-- Chatbot escalation tickets (POST /api/chat/escalate)
+create table if not exists support_tickets (
+  id bigint generated always as identity primary key,
+  ticket text not null unique,
+  email text not null,
+  subject text,
+  body text,
+  category text,
+  status text default 'open',
+  created_at timestamptz default now()
+);
+
+-- Chatbot satisfaction ratings (POST /api/chat/rating)
+create table if not exists chat_ratings (
+  id bigint generated always as identity primary key,
+  rating integer not null,
+  feedback text,
+  created_at timestamptz default now()
+);
+
+-- Optional: knowledge base articles served to the chatbot
+create table if not exists knowledge_articles (
+  id text primary key,
+  title text not null,
+  category text,
+  keywords text[] default '{}',
+  answer text,
+  follow_up text,
+  escalate_if_unresolved boolean default true,
+  published boolean default true,
+  updated_at timestamptz default now()
+);
+
 -- Seed product data (same as server/products.json fallback)
 insert into products (id, name, title, silhouette, price, badge, color, tags, image, hover_image, sizes, sort_order)
 values
