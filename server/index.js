@@ -33,6 +33,9 @@ const supabase =
 const fallbackProducts = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'products.json'), 'utf-8')
 );
+const knowledgeBase = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'knowledge.json'), 'utf-8')
+);
 
 const isMissingTable = (err) =>
   err && (err.code === '42P01' || /does not exist|Could not find the table/i.test(err.message || ''));
@@ -156,8 +159,29 @@ app.post('/api/newsletter', async (req, res) => {
 // approved knowledge-base content. It never invents answers —
 // unmatched queries return offerEscalation so the UI can escalate.
 app.post('/api/chat', async (req, res) => {
-  const { message, history = [], product = null, email = null } = req.body || {};
+  const { message, history = [], product = null, email = null, image = null } = req.body || {};
   const result = answer({ message, history, product });
+
+  // Photo uploaded: let the vision model assess it against the matched article.
+  if (image) {
+    const imgArticle = result.articleId
+      ? knowledgeBase.find((a) => a.id === result.articleId)
+      : null;
+    const llm = await llmReply({
+      article: imgArticle,
+      message: message || 'The customer uploaded a photo of their shoe issue.',
+      history,
+      product,
+      image: String(image).slice(0, 400000), // cap the data URL for the request
+    }).catch(() => null);
+    if (llm) {
+      return res.json({
+        reply: `${llm}\n\nNote: a photo alone can't confirm a defect — our support team can review it properly if needed.`,
+        category: result.category === 'unknown' ? 'image' : result.category,
+        resolvable: true,
+      });
+    }
+  }
 
   // Fetch the customer's orders so the LLM can reference verified data.
   let orders = [];
@@ -178,8 +202,7 @@ app.post('/api/chat', async (req, res) => {
   // Unknown/escalation replies stay rule-based (never invented).
   if (result.articleId || result.category === 'greeting' || result.category === 'thanks') {
     const article = result.articleId
-      ? JSON.parse(fs.readFileSync(path.join(__dirname, 'knowledge.json'), 'utf-8'))
-          .find((a) => a.id === result.articleId)
+      ? knowledgeBase.find((a) => a.id === result.articleId)
       : null;
     const llm = await llmReply({
       article,
@@ -260,7 +283,9 @@ app.post('/api/chat/rating', async (req, res) => {
 });
 
 // Orders for a customer email — used by the chatbot to show
-// purchased products for logged-in customers.
+// purchased products for logged-in customers. Items are enriched
+// with verified catalog data (image, colour) so the chat cards
+// never rely on AI-generated details.
 app.get('/api/orders', async (req, res) => {
   const email = String(req.query.email || '').trim();
   if (!email || !supabase) return res.json([]);
@@ -272,7 +297,30 @@ app.get('/api/orders', async (req, res) => {
       .order('created_at', { ascending: false })
       .limit(10);
     if (error) throw error;
-    res.json(data || []);
+    const catalog = fallbackProducts;
+    res.json(
+      (data || []).map((o) => {
+        const days = Math.floor((Date.now() - new Date(o.created_at)) / 864e5);
+        return {
+          orderId: `CMT-${String(100000 + Number(o.id))}`,
+          date: o.created_at,
+          status: days > 7 ? 'Delivered' : 'Confirmed',
+          total: o.total,
+          items: (o.items || []).map((i) => {
+            const p = catalog.find((c) => c.id === i.id) || {};
+            return {
+              id: i.id,
+              title: i.title || p.title,
+              silhouette: i.silhouette || p.silhouette,
+              color: i.color || p.color,
+              size: i.size,
+              price: i.price || p.price,
+              image: p.image,
+            };
+          }),
+        };
+      })
+    );
   } catch (e) {
     if (!isMissingTable(e)) console.error('Orders fetch error:', e.message);
     res.json([]);

@@ -132,6 +132,16 @@ export function buildEscalationEmail({ email, product, history = [], category })
 
   const subject = `Comet Customer Support – ${category || 'General Query'} – ${ticket}`;
 
+  const productLines = product
+    ? [
+        `- Product: ${product.silhouette} ${product.title} (${product.color || 'n/a'})`,
+        `- Variant: UK ${product.size || 'n/a'} · ₹${product.price || 'n/a'}`,
+        product.orderId ? `- Order: ${product.orderId}` : null,
+        product.orderDate ? `- Purchased: ${new Date(product.orderDate).toLocaleDateString('en-IN')}` : null,
+        product.orderStatus ? `- Order status: ${product.orderStatus}` : null,
+      ].filter(Boolean)
+    : ['- Product: not specified'];
+
   const body = [
     'Hello Customer Support Team,',
     '',
@@ -139,17 +149,20 @@ export function buildEscalationEmail({ email, product, history = [], category })
     '',
     'Customer details',
     `- Customer email: ${email}`,
-    product ? `- Product: ${product.silhouette} ${product.title} (${product.color || 'n/a'})` : '- Product: not specified',
-    `- Issue category: ${category || 'General'}`,
     '',
-    'Issue summary',
-    userMsgs.length ? `The customer reported: "${userMsgs[0].text}"` : 'See the conversation below.',
+    'Product and order details',
+    ...productLines,
+    '',
+    'Issue details',
+    `- Issue category: ${category || 'General'}`,
+    userMsgs.length ? `- Original query: "${userMsgs[0].text}"` : '- See conversation below.',
+    `- Reason for escalation: ${unresolvedReason(category)}`,
+    images ? `- Attachments: ${images} customer-uploaded image(s)` : null,
     '',
     'Actions taken',
     botMsgs.length
       ? `The chatbot provided ${botMsgs.length} response(s), including: "${botMsgs[botMsgs.length - 1].text.slice(0, 200)}"`
       : 'No automated resolution was available.',
-    images ? `The customer also uploaded ${images} image(s).` : '',
     '',
     'Conversation history',
     transcript,
@@ -163,8 +176,14 @@ export function buildEscalationEmail({ email, product, history = [], category })
     'Regards,',
     'Comet AI Customer Support',
   ]
-    .filter(Boolean)
+    .filter((l) => l !== null)
     .join('\n');
 
   return { ticket, subject, body };
+}
+
+function unresolvedReason(category) {
+  if (category === 'unknown') return 'No reliable answer in the approved knowledge base';
+  if (category) return `Issue remained unresolved after guided troubleshooting (${category})`;
+  return 'Customer requested human assistance';
 }

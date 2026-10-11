@@ -25,12 +25,13 @@ function newConversation() {
   ];
 }
 
-export default function HelpChat({ open, onClose, user }) {
+export default function HelpChat({ open, onClose, user, onLogin }) {
   const [messages, setMessages] = useState(newConversation);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [stage, setStage] = useState('topics'); // topics | chat | resolving | escalate | rating | done
+  const [stage, setStage] = useState('topics'); // topics | products | chat | resolving | escalate-offer | anything-else | rating | done
   const [product, setProduct] = useState(null);
+  const [orders, setOrders] = useState(null); // null = not fetched
   const [lastCategory, setLastCategory] = useState(null);
   const [unresolved, setUnresolved] = useState(0);
   const [escEmail, setEscEmail] = useState('');
@@ -40,7 +41,14 @@ export default function HelpChat({ open, onClose, user }) {
   const fileRef = useRef(null);
 
   useEffect(() => {
-    if (open && user?.email) setEscEmail(user.email);
+    if (!open) return;
+    if (user?.email) {
+      setEscEmail(user.email);
+      fetch(`/api/orders?email=${encodeURIComponent(user.email)}`)
+        .then((r) => r.json())
+        .then((o) => setOrders(Array.isArray(o) ? o : []))
+        .catch(() => setOrders([]));
+    }
   }, [open, user]);
 
   useEffect(() => {
@@ -49,12 +57,12 @@ export default function HelpChat({ open, onClose, user }) {
 
   const push = (m) => setMessages((ms) => [...ms, m]);
 
-  const send = async (text) => {
+  const send = async (text, image) => {
     const msg = (text ?? input).trim();
-    if (!msg || sending) return;
+    if ((!msg && !image) || sending) return;
     setInput('');
     setStage('chat');
-    const userMsg = { from: 'user', text: msg };
+    const userMsg = { from: 'user', text: msg, image: image || undefined };
     push(userMsg);
     setSending(true);
     try {
@@ -64,15 +72,13 @@ export default function HelpChat({ open, onClose, user }) {
         body: JSON.stringify({
           message: msg,
           product,
+          email: user?.email,
+          image,
           history: [...messages, userMsg].slice(-10),
         }),
       });
       const data = await res.json();
-      push({
-        from: 'bot',
-        text: data.reply,
-        followUp: data.followUp,
-      });
+      push({ from: 'bot', text: data.reply, followUp: data.followUp });
       setLastCategory(data.category || null);
       if (data.offerEscalation) setStage('escalate-offer');
       else if (data.resolvable) setStage('resolving');
@@ -83,22 +89,55 @@ export default function HelpChat({ open, onClose, user }) {
     }
   };
 
+  // Downscale the photo so the data URL stays small enough for the API.
   const sendImage = (file) => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      push({ from: 'user', image: reader.result, text: '' });
-      setSending(true);
-      setTimeout(() => {
-        push({
-          from: 'bot',
-          text: "Thanks — I can see the photo. A picture helps, though I can't confirm a defect from an image alone. I've noted it; our support team can review it properly. Could you also tell me what happened to the pair?",
-        });
-        setStage('resolving');
-        setSending(false);
-      }, 900);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1, 900 / Math.max(img.width, img.height));
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        send('', canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = reader.result;
     };
     reader.readAsDataURL(file);
+  };
+
+  const selectProduct = (item, order) => {
+    setProduct({ ...item, orderId: order.orderId, orderDate: order.date, orderStatus: order.status });
+    push({ from: 'user', text: `I need help with my ${item.silhouette} ${item.title}` });
+    push({
+      from: 'bot',
+      text: `Got it — your ${item.silhouette} ${item.title} (${item.color}, UK ${item.size}) from order ${order.orderId}. What issue are you experiencing with this product?`,
+    });
+    setStage('chat');
+  };
+
+  const wantProductHelp = () => {
+    if (!user) {
+      push({
+        from: 'bot',
+        text: 'To pull up your purchases, please log in first — then I can show your orders right here. You can still ask general questions meanwhile.',
+      });
+      setStage('chat');
+      return;
+    }
+    if (orders === null) return; // still loading
+    if (orders.length === 0) {
+      push({
+        from: 'bot',
+        text: "I couldn't find any purchases on this account yet — but I can still help! Tell me which product and what's going on.",
+      });
+      setStage('chat');
+      return;
+    }
+    push({ from: 'bot', text: 'Here are your purchases — which one do you need help with?' });
+    setStage('products');
   };
 
   const resolved = (yes) => {
@@ -113,7 +152,7 @@ export default function HelpChat({ open, onClose, user }) {
       if (n >= 2) {
         push({
           from: 'bot',
-          text: "I'm sorry we couldn't get this sorted over chat. Shall I send this conversation to our support team so a human can take a proper look?",
+          text: "I'm sorry we couldn't fully resolve your issue. Would you like me to send your case to Comet Customer Support?",
         });
         setStage('escalate-offer');
       } else {
@@ -168,15 +207,22 @@ export default function HelpChat({ open, onClose, user }) {
       if (!res.ok) throw new Error(data.error);
       push({
         from: 'bot',
-        text: `Done — I've sent the full conversation to our support team. Your ticket is ${data.ticket}. They'll reply to ${escEmail.trim()} shortly.`,
+        text: `Done — your case is with our support team. Ticket ${data.ticket}. They'll reply to ${escEmail.trim()} shortly.`,
       });
       setStage('done');
     } catch (e) {
-      push({ from: 'bot', text: `I couldn't send that just now (${e.message}). You can also email hello@wearcomet.com directly.` });
+      push({ from: 'bot', text: `I couldn't send that just now (${e.message}). You can also reach us on WhatsApp +91 9606081463.` });
       setStage('chat');
     } finally {
       setEscSending(false);
     }
+  };
+
+  const reset = () => {
+    setMessages(newConversation());
+    setStage('topics');
+    setUnresolved(0);
+    setProduct(null);
   };
 
   if (!open) return null;
@@ -191,11 +237,23 @@ export default function HelpChat({ open, onClose, user }) {
         <button className="chat-close" onClick={onClose} aria-label="Close help chat">×</button>
       </div>
 
+      {product && (
+        <div className="chat-product-bar">
+          {product.image && <img src={product.image} alt="" />}
+          <div>
+            <b>{product.silhouette} {product.title}</b>
+            <span>{product.color} · UK {product.size} · {product.orderId}</span>
+          </div>
+          <button onClick={wantProductHelp}>Change</button>
+        </div>
+      )}
+
       <div className="chat-messages" ref={listRef}>
         {messages.map((m, i) =>
           m.image ? (
             <div key={i} className="chat-msg user chat-img">
               <img src={m.image} alt="uploaded" />
+              {m.text && <div>{m.text}</div>}
             </div>
           ) : (
             <div key={i} className={`chat-msg ${m.from}`}>
@@ -209,10 +267,40 @@ export default function HelpChat({ open, onClose, user }) {
         {stage === 'topics' && (
           <div className="chat-chips">
             {TOPICS.map((t) => (
-              <button key={t} className="chat-chip" onClick={() => TOPIC_MESSAGES[t] ? send(TOPIC_MESSAGES[t]) : setStage('chat')}>
+              <button
+                key={t}
+                className="chat-chip"
+                onClick={() =>
+                  t === 'My purchased product has an issue'
+                    ? wantProductHelp()
+                    : TOPIC_MESSAGES[t]
+                      ? send(TOPIC_MESSAGES[t])
+                      : setStage('chat')
+                }
+              >
                 {t}
               </button>
             ))}
+          </div>
+        )}
+
+        {stage === 'products' && orders && (
+          <div className="chat-products">
+            {orders.map((o) =>
+              o.items.map((it, idx) => (
+                <button key={`${o.orderId}-${idx}`} className="chat-product-card" onClick={() => selectProduct(it, o)}>
+                  {it.image && <img src={it.image} alt={it.title} />}
+                  <div className="cp-info">
+                    <b>{it.silhouette} {it.title}</b>
+                    <span>{it.color} · UK {it.size}</span>
+                    <span className="cp-order">{o.orderId} · {new Date(o.date).toLocaleDateString('en-IN')} · {o.status}</span>
+                  </div>
+                </button>
+              ))
+            )}
+            <button className="chat-chip" onClick={() => { push({ from: 'bot', text: 'No problem — just tell me which product and what the issue is.' }); setStage('chat'); }}>
+              None of these / other
+            </button>
           </div>
         )}
 
@@ -233,7 +321,7 @@ export default function HelpChat({ open, onClose, user }) {
 
         {stage === 'escalate-offer' && (
           <div className="chat-escalate">
-            <p>Send this conversation to customer support?</p>
+            <p>Send this case to customer support?</p>
             <input
               className="chat-email"
               type="email"
@@ -243,7 +331,7 @@ export default function HelpChat({ open, onClose, user }) {
             />
             <div className="chat-chips">
               <button className="chat-chip dark" onClick={escalate} disabled={escSending}>
-                {escSending ? 'Sending…' : 'Yes, send it'}
+                {escSending ? 'Sending…' : 'Yes, create ticket'}
               </button>
               <button className="chat-chip" onClick={() => setStage('chat')}>Keep chatting</button>
             </div>
@@ -268,17 +356,7 @@ export default function HelpChat({ open, onClose, user }) {
 
         {stage === 'done' && (
           <div className="chat-chips">
-            <button
-              className="chat-chip"
-              onClick={() => {
-                setMessages(newConversation());
-                setStage('topics');
-                setUnresolved(0);
-                setProduct(null);
-              }}
-            >
-              Start a new conversation
-            </button>
+            <button className="chat-chip" onClick={reset}>Start a new conversation</button>
           </div>
         )}
       </div>

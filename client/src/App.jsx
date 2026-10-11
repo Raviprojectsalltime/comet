@@ -174,7 +174,12 @@ export default function App() {
         />
       )}
 
-      <HelpChat open={chatOpen} onClose={() => setChatOpen(false)} user={user} />
+      <HelpChat
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        user={user}
+        onLogin={() => setLoginOpen(true)}
+      />
 
       {toast && <div className="toast">{toast}</div>}
     </>

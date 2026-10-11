@@ -18,7 +18,7 @@ STRICT RULES — follow them exactly:
 - Prices: X Lows ₹4,299+, Aeon V2 ₹4,499+, Aeres ₹5,299+, Hukum ₹5,899. Support email: hello@wearcomet.com, WhatsApp +91 9606081463.`;
 
 // Call the LLM with the grounded context. Returns reply text or null on failure.
-export async function llmReply({ article, message, history, product, orders, email }) {
+export async function llmReply({ article, message, history, product, orders, email, image }) {
   const { key, url, model } = conf();
   if (!key) return null;
 
@@ -52,7 +52,17 @@ export async function llmReply({ article, message, history, product, orders, ema
       .filter((m) => m.text)
       .slice(-8)
       .map((m) => ({ role: m.from === 'user' ? 'user' : 'assistant', content: m.text })),
-    { role: 'user', content: message },
+    // Vision: send the uploaded photo alongside the question so the model
+    // can comment on visible issues (tear, sole separation, discolouration).
+    image
+      ? {
+          role: 'user',
+          content: [
+            { type: 'text', text: `${message}\n\nThe customer uploaded this photo of the product. Describe only what is visibly relevant, do not declare a defect or refund eligibility.` },
+            { type: 'image_url', image_url: { url: image } },
+          ],
+        }
+      : { role: 'user', content: message },
   ];
 
   try {
