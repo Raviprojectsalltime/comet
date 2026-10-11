@@ -48,10 +48,17 @@ const AFFIRM = /^(yes|yeah|yep|sure|it worked|resolved|fixed|that helped)/i;
 
 function overlapScore(article, text) {
   const lower = text.toLowerCase();
-  return article.keywords.reduce(
+  let score = article.keywords.reduce(
     (s, k) => (lower.includes(k.toLowerCase()) ? s + 1 : s),
     0
   );
+  // Title words also count as weak signals (skip generic ones).
+  for (const w of article.title.toLowerCase().split(/[^a-z]+/)) {
+    if (w.length > 3 && !['what', 'when', 'with', 'from', 'your', 'shoes', 'shoe', 'pair'].includes(w) && lower.includes(w)) {
+      score += 0.5;
+    }
+  }
+  return score;
 }
 
 // Combine the current message with recent user messages for context.
@@ -97,7 +104,7 @@ export function answer({ message, history = [], product }) {
         bestScore = s;
       }
     }
-    if (bestScore >= 2) article = best;
+    if (bestScore >= 1) article = best;
   }
 
   const productNote = product ? ` (regarding your ${product.silhouette} ${product.title})` : '';
