@@ -930,6 +930,79 @@ a {
   color: var(--muted);
 }
 
+.search-viewall {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--comet-red);
+  text-align: left;
+  padding: 4px 0 10px;
+  letter-spacing: 0.5px;
+}
+
+.search-viewall:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Search results page ---------- */
+.results-page {
+  min-height: 70vh;
+  padding: 36px 40px 70px;
+}
+
+.results-head {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.results-back {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+.results-back:hover {
+  color: var(--text);
+}
+
+.results-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.results-count {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.results-grid .product-card {
+  min-width: 0;
+}
+
+.results-empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 60px 0;
+}
+
+.results-browse {
+  width: auto;
+  margin-top: 20px;
+  padding: 14px 34px;
+}
+
 /* ---------- Overlays (search / login / quick add) ---------- */
 .modal-backdrop {
   position: fixed;

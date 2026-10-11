@@ -9,6 +9,7 @@ import PressBar from './components/PressBar.jsx';
 import Footer from './components/Footer.jsx';
 import CartDrawer from './components/CartDrawer.jsx';
 import SearchPanel from './components/SearchPanel.jsx';
+import SearchResults from './components/SearchResults.jsx';
 import LoginModal from './components/LoginModal.jsx';
 import QuickAddModal from './components/QuickAddModal.jsx';
 import HelpChat from './components/HelpChat.jsx';
@@ -22,6 +23,7 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [quickAdd, setQuickAdd] = useState(null);
   const [toast, setToast] = useState('');
+  const [page, setPage] = useState({ name: 'home' });
 
   useEffect(() => {
     fetch('/api/products')
@@ -44,7 +46,15 @@ export default function App() {
   const removeFromCart = (key) => setCart((c) => c.filter((i) => i.key !== key));
 
   const scrollToProducts = () => {
-    document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' });
+    setPage({ name: 'home' });
+    requestAnimationFrame(() =>
+      document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
+    );
+  };
+
+  const goHome = () => {
+    setPage({ name: 'home' });
+    window.scrollTo({ top: 0 });
   };
 
   return (
@@ -57,6 +67,7 @@ export default function App() {
         onHelp={() => setChatOpen(true)}
         onShopMen={scrollToProducts}
         onShopWomen={scrollToProducts}
+        onHome={goHome}
       />
 
       <SearchPanel
@@ -67,18 +78,34 @@ export default function App() {
           setSearchOpen(false);
           setQuickAdd(p);
         }}
+        onSubmit={(q) => {
+          setSearchOpen(false);
+          setPage({ name: 'search', query: q });
+          window.scrollTo({ top: 0 });
+        }}
       />
 
-      <Hero onPreOrder={scrollToProducts} />
+      {page.name === 'search' ? (
+        <SearchResults
+          query={page.query}
+          products={products}
+          onQuickAdd={setQuickAdd}
+          onBack={goHome}
+        />
+      ) : (
+        <>
+          <Hero onPreOrder={scrollToProducts} />
 
-      <section id="products">
-        <ProductCarousel products={products} onQuickAdd={setQuickAdd} />
-      </section>
+          <section id="products">
+            <ProductCarousel products={products} onQuickAdd={setQuickAdd} />
+          </section>
 
-      <XLowsSection onShop={scrollToProducts} />
-      <SplitTiles onShop={scrollToProducts} />
-      <Testimonials />
-      <PressBar />
+          <XLowsSection onShop={scrollToProducts} />
+          <SplitTiles onShop={scrollToProducts} />
+          <Testimonials />
+          <PressBar />
+        </>
+      )}
       <Footer />
 
       {cartOpen && (

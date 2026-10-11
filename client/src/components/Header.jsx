@@ -1,10 +1,10 @@
 const SNEAKERS_MEN = ['Shop All', 'X Lows', 'Aeon', 'Apex', 'Aeres', 'Hukum'];
 const SNEAKERS_WOMEN = ['Shop All', 'X Lows', 'Astra', 'Aeon', 'Apex', 'Aeres', 'Hukum'];
 
-export default function Header({ cartCount, onCart, onSearch, onLogin, onHelp, onShopMen, onShopWomen }) {
+export default function Header({ cartCount, onCart, onSearch, onLogin, onHelp, onShopMen, onShopWomen, onHome }) {
   return (
     <header className="header">
-      <a className="header-logo" href="/">COMET</a>
+      <a className="header-logo" href="/" onClick={(e) => { e.preventDefault(); onHome?.(); }}>COMET</a>
 
       <nav className="header-nav">
         <div className="nav-item has-dropdown">

@@ -21,19 +21,9 @@ const CHIPS = [
   { label: 'Everyday', query: 'everyday' },
 ];
 
-const STOP_WORDS = new Set([
-  'a', 'an', 'the', 'me', 'my', 'i', 'for', 'to', 'and', 'or', 'with', 'want',
-  'need', 'find', 'get', 'pair', 'of', 'shoe', 'shoes', 'sneaker', 'sneakers',
-  'something', 'use', 'used', 'it', 'as', 'well', 'both', 'combined', 'like',
-  'going', 'best', 'where', 'that', 'can', 'also',
-]);
+import { searchProducts } from '../search.js';
 
-function score(product, tokens) {
-  const hay = `${product.name} ${product.silhouette} ${product.color} ${(product.tags || []).join(' ')}`.toLowerCase();
-  return tokens.reduce((s, t) => (hay.includes(t) ? s + 1 : s), 0);
-}
-
-export default function SearchPanel({ open, products, onClose, onSelect }) {
+export default function SearchPanel({ open, products, onClose, onSelect, onSubmit }) {
   const [query, setQuery] = useState('');
   const [placeholder, setPlaceholder] = useState('');
   const inputRef = useRef(null);
@@ -83,18 +73,7 @@ export default function SearchPanel({ open, products, onClose, onSelect }) {
     if (!open) setQuery('');
   }, [open]);
 
-  const tokens = query
-    .toLowerCase()
-    .split(/[^a-z]+/)
-    .filter((t) => t && !STOP_WORDS.has(t));
-
-  const matches = tokens.length
-    ? products
-        .map((p) => ({ p, s: score(p, tokens) }))
-        .filter((x) => x.s > 0)
-        .sort((a, b) => b.s - a.s)
-        .map((x) => x.p)
-    : products;
+  const matches = query ? searchProducts(products, query) : products;
 
   return (
     <div className={`search-panel ${open ? 'open' : ''}`}>
@@ -110,7 +89,10 @@ export default function SearchPanel({ open, products, onClose, onSelect }) {
             placeholder={placeholder || 'Tell us your story…'}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && onClose()}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') onClose();
+              if (e.key === 'Enter' && query.trim()) onSubmit(query.trim());
+            }}
           />
           <button className="search-panel-close" onClick={onClose} aria-label="Close search">×</button>
         </div>
@@ -119,7 +101,7 @@ export default function SearchPanel({ open, products, onClose, onSelect }) {
           <div className="search-chips">
             <span className="search-chips-label">Try:</span>
             {CHIPS.map((c) => (
-              <button key={c.label} className="search-chip" onClick={() => setQuery(c.query)}>
+              <button key={c.label} className="search-chip" onClick={() => onSubmit(c.query)}>
                 {c.label}
               </button>
             ))}
@@ -128,8 +110,11 @@ export default function SearchPanel({ open, products, onClose, onSelect }) {
 
         {query && (
           <div className="search-panel-results">
+            <button className="search-viewall" onClick={() => onSubmit(query.trim())}>
+              View all {matches.length} result{matches.length === 1 ? '' : 's'} →
+            </button>
             {matches.length ? (
-              matches.map((p) => (
+              matches.slice(0, 8).map((p) => (
                 <div className="search-result" key={p.id} onClick={() => onSelect(p)}>
                   <img src={p.image} alt={p.name} />
                   <div>
