@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function CartDrawer({ items, onClose, onRemove, onCheckout }) {
+export default function CartDrawer({ items, onClose, onRemove, onCheckout, user, onLogin }) {
   const [placed, setPlaced] = useState(false);
   const total = items.reduce((sum, i) => sum + i.price, 0);
 
@@ -62,6 +62,13 @@ export default function CartDrawer({ items, onClose, onRemove, onCheckout }) {
 
         {items.length > 0 && (
           <div className="cart-footer">
+            {user ? (
+              <p className="cart-as">Ordering as <b>{user.email}</b></p>
+            ) : (
+              <button className="cart-login-link" onClick={onLogin}>
+                Log in to attach this order to your account
+              </button>
+            )}
             <div className="cart-total">
               <span>Subtotal</span>
               <span>₹ {total.toLocaleString('en-IN')}</span>

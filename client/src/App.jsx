@@ -24,6 +24,13 @@ export default function App() {
   const [quickAdd, setQuickAdd] = useState(null);
   const [toast, setToast] = useState('');
   const [page, setPage] = useState({ name: 'home' });
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('comet_user')) || null;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
     fetch('/api/products')
@@ -45,6 +52,34 @@ export default function App() {
 
   const removeFromCart = (key) => setCart((c) => c.filter((i) => i.key !== key));
 
+  const handleLogin = (u) => {
+    setUser(u);
+    localStorage.setItem('comet_user', JSON.stringify(u));
+    setLoginOpen(false);
+    showToast(`Welcome, ${u.email.split('@')[0]}!`);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('comet_user');
+    showToast('Logged out');
+  };
+
+  const checkout = () => {
+    const items = cart.map(({ id, title, silhouette, price, size }) => ({
+      id, title, silhouette, price, size,
+    }));
+    const total = cart.reduce((s, i) => s + i.price, 0);
+    if (user) {
+      fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, items, total }),
+      }).catch(() => {});
+    }
+    setCart([]);
+  };
+
   const scrollToProducts = () => {
     setPage({ name: 'home' });
     requestAnimationFrame(() =>
@@ -64,6 +99,8 @@ export default function App() {
         onCart={() => setCartOpen(true)}
         onSearch={() => setSearchOpen((o) => !o)}
         onLogin={() => setLoginOpen(true)}
+        onLogout={handleLogout}
+        user={user}
         onHelp={() => setChatOpen(true)}
         onShopMen={scrollToProducts}
         onShopWomen={scrollToProducts}
@@ -113,17 +150,19 @@ export default function App() {
           items={cart}
           onClose={() => setCartOpen(false)}
           onRemove={removeFromCart}
-          onCheckout={() => setCart([])}
+          onCheckout={checkout}
+          user={user}
+          onLogin={() => {
+            setCartOpen(false);
+            setLoginOpen(true);
+          }}
         />
       )}
 
       {loginOpen && (
         <LoginModal
           onClose={() => setLoginOpen(false)}
-          onSubmit={() => {
-            setLoginOpen(false);
-            showToast('OTP sent! Login is coming soon.');
-          }}
+          onSuccess={handleLogin}
         />
       )}
 

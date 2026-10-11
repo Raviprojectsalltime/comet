@@ -1136,6 +1136,88 @@ a {
   text-align: center;
 }
 
+.login-error {
+  color: var(--comet-red);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.login-switch {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 16px;
+}
+
+.login-switch button {
+  color: var(--comet-red);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.account-wrap {
+  position: relative;
+}
+
+.account-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--comet-red);
+}
+
+.account-menu {
+  display: none;
+  position: absolute;
+  top: 130%;
+  right: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #eee;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 14px 16px;
+  z-index: 120;
+}
+
+.account-wrap:hover .account-menu {
+  display: block;
+}
+
+.account-email {
+  font-size: 12px;
+  font-weight: 700;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.account-menu button {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--comet-red);
+  padding: 4px 0;
+}
+
+.cart-as {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.cart-login-link {
+  display: block;
+  font-size: 12px;
+  color: var(--comet-red);
+  font-weight: 700;
+  margin-bottom: 12px;
+  text-decoration: underline;
+}
+
 /* ---------- Quick add ---------- */
 .size-grid {
   display: grid;

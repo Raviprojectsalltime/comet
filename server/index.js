@@ -68,6 +68,69 @@ app.get('/api/products', async (_req, res) => {
   res.json(fallbackProducts);
 });
 
+// ---------- Auth (Supabase Auth) ----------
+
+app.post('/api/auth/signup', async (req, res) => {
+  const email = String(req.body?.email || '').trim();
+  const password = String(req.body?.password || '');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return res.status(400).json({ error: 'Enter a valid email address' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+  if (!supabase) return res.status(503).json({ error: 'Auth not configured' });
+  // email_confirm:true skips the confirmation email for this demo.
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (error) {
+    const msg = /already been registered|already exists/i.test(error.message)
+      ? 'This email is already registered — try logging in'
+      : error.message;
+    return res.status(400).json({ error: msg });
+  }
+  res.json({ user: { id: data.user.id, email: data.user.email } });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const email = String(req.body?.email || '').trim();
+  const password = String(req.body?.password || '');
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+  if (!supabase) return res.status(503).json({ error: 'Auth not configured' });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return res.status(401).json({ error: 'Invalid email or password' });
+  res.json({
+    user: { id: data.user.id, email: data.user.email },
+    session: { access_token: data.session?.access_token },
+  });
+});
+
+// Orders attached to the logged-in user's email.
+app.post('/api/orders', async (req, res) => {
+  const { email, items, total } = req.body || {};
+  if (!email || !Array.isArray(items) || !items.length) {
+    return res.status(400).json({ error: 'Missing order details' });
+  }
+  if (!supabase) return res.json({ ok: true, stored: false });
+  try {
+    const { error } = await supabase.from('orders').insert({
+      email,
+      items,
+      total: Number(total) || 0,
+    });
+    if (error) throw error;
+    res.json({ ok: true, stored: true });
+  } catch (e) {
+    console.error('Order insert error:', e.message);
+    res.json({ ok: true, stored: false, reason: isMissingTable(e) ? 'table_missing' : 'error' });
+  }
+});
+
 // Newsletter signup → newsletter_subscribers table.
 app.post('/api/newsletter', async (req, res) => {
   const email = String(req.body?.email || '').trim();

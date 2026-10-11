@@ -32,6 +32,15 @@ create table if not exists chat_messages (
   created_at timestamptz default now()
 );
 
+-- Orders attached to the logged-in user's email (POST /api/orders)
+create table if not exists orders (
+  id bigint generated always as identity primary key,
+  email text not null,
+  items jsonb not null,
+  total integer default 0,
+  created_at timestamptz default now()
+);
+
 -- Seed product data (same as server/products.json fallback)
 insert into products (id, name, title, silhouette, price, badge, color, tags, image, hover_image, sizes, sort_order)
 values
