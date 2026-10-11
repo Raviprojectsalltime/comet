@@ -105,7 +105,7 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
     push({ from: 'user', text: `I need help with my ${item.silhouette} ${item.title}` });
     push({
       from: 'bot',
-      text: `Got it — your ${item.silhouette} ${item.title} (${item.color}, UK ${item.size}) from order ${order.orderId}, ${order.status.toLowerCase()} on ${new Date(order.date).toLocaleDateString('en-IN')}. What issue are you facing with this product?`,
+      text: `Got it! Your ${item.silhouette} ${item.title} (${item.color}, UK ${item.size}) from order ${order.orderId}, ${order.status.toLowerCase()} on ${new Date(order.date).toLocaleDateString('en-IN')}. What issue are you facing with this product?`,
     });
     setStage('chat');
   };
@@ -128,7 +128,7 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
       } else {
         push({
           from: 'bot',
-          text: "Okay, let's try one more thing — can you describe what's happening in a bit more detail? If it's damage or a defect, a photo would really help (use the attachment button).",
+          text: "Okay, let's try one more thing. Can you describe what's happening in a bit more detail? If it's damage or a defect, a photo would really help (use the attachment button).",
         });
         setStage('chat');
       }
@@ -138,7 +138,7 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
   const anythingElse = (yes) => {
     if (yes) {
       push({ from: 'user', text: 'Yes, I have another question' });
-      push({ from: 'bot', text: 'Go ahead — what else can I help with?' });
+      push({ from: 'bot', text: 'Go ahead, what else can I help with?' });
       setStage('chat');
     } else {
       push({ from: 'user', text: 'No, that’s all' });
@@ -178,8 +178,8 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
       push({
         from: 'bot',
         text: data.emailSent
-          ? `Done — I've emailed your case to our support team (${data.to}). Ticket ${data.ticket}. They'll reply to ${escEmail.trim()} shortly.`
-          : `Done — your case is filed as ticket ${data.ticket} with our support team. They'll reply to ${escEmail.trim()} shortly.`,
+          ? `Done! I've emailed your case to our support team (${data.to}). Ticket ${data.ticket}. They'll reply to ${escEmail.trim()} shortly.`
+          : `Done! Your case is filed as ticket ${data.ticket} with our support team. They'll reply to ${escEmail.trim()} shortly.`,
       });
       setStage('done');
     } catch (e) {
@@ -243,7 +243,7 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
 
         {showProducts && orders && orders.length > 0 && (
           <div className="chat-products-wrap">
-            <div className="chat-products-label">Your purchases — tap one for help</div>
+            <div className="chat-products-label">Your purchases. Tap one for help</div>
             <div className="chat-product-row">
               {orders.map((o) =>
                 o.items.map((it, idx) => (

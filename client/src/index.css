@@ -1274,7 +1274,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--text);
+  background: linear-gradient(135deg, #3b2416 0%, #553317 100%);
   color: #fff;
   padding: 16px 18px;
 }
@@ -1298,7 +1298,7 @@ a {
 
 .chat-header .sub {
   font-size: 11px;
-  color: #bbb;
+  color: #e8d5c4;
   margin-top: 3px;
 }
 
@@ -1316,16 +1316,29 @@ a {
   padding: 10px 14px;
   border-radius: 14px;
   margin-bottom: 10px;
+  animation: msg-in 0.25s ease-out;
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .chat-msg.bot {
   background: #fff;
   border: 1px solid #e6e6e6;
   border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .chat-msg.user {
-  background: var(--text);
+  background: #3b2416;
   color: #fff;
   margin-left: auto;
   border-bottom-right-radius: 4px;
@@ -1348,8 +1361,12 @@ a {
   padding: 0 20px;
   font-size: 13px;
   font-weight: 800;
-  color: var(--comet-red);
+  color: var(--text);
   letter-spacing: 0.5px;
+}
+
+.chat-input button:hover {
+  color: #3b2416;
 }
 
 .chat-attach {
