@@ -103,9 +103,10 @@ export default function App() {
         onLogout={handleLogout}
         user={user}
         onHelp={() => setChatOpen(true)}
-        onDashboard={() =>
-          user ? setPage({ name: 'dashboard' }) : setLoginOpen(true)
-        }
+        onDashboard={() => {
+          setPage({ name: 'dashboard' });
+          window.scrollTo({ top: 0 });
+        }}
         onShopMen={scrollToProducts}
         onShopWomen={scrollToProducts}
         onHome={goHome}

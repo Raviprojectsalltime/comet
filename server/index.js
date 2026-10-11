@@ -317,6 +317,28 @@ app.post('/api/chat/rating', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ---------- Ops Intelligence Platform ----------
+// Internal stakeholder dashboard data — completely separate ops_*
+// tables, independent from the customer-facing catalog/orders.
+const OPS_TABLES = ['ops_orders', 'ops_shipments', 'ops_batches', 'ops_inventory', 'ops_returns', 'ops_refunds'];
+
+app.get('/api/ops/:table', async (req, res) => {
+  const table = req.params.table;
+  if (!OPS_TABLES.includes(table)) return res.status(404).json({ error: 'unknown ops table' });
+  if (!supabase) return res.json([]);
+  try {
+    let q = supabase.from(table).select('*').limit(1000);
+    if (table === 'ops_orders') q = q.order('order_date', { ascending: false });
+    if (table === 'ops_returns' || table === 'ops_refunds') q = q.order('request_date', { ascending: false });
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e) {
+    if (!isMissingTable(e)) console.error(`Ops fetch ${table}:`, e.message);
+    res.json([]);
+  }
+});
+
 // Support tickets for a customer email — dashboard view.
 app.get('/api/tickets', async (req, res) => {
   const email = String(req.query.email || '').trim();
