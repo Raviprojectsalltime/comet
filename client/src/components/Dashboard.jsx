@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as XLSX from 'xlsx';
+
+// SheetJS is heavy — load it only when a user actually uploads/downloads.
+const loadXlsx = () => import('xlsx');
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: '◫' },
@@ -103,6 +105,7 @@ function UploadBar({ tables, onUploaded }) {
   const parseAndSend = async (file) => {
     setMsg('Parsing file…');
     try {
+      const XLSX = await loadXlsx();
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf);
       const allRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
@@ -207,7 +210,8 @@ export default function Dashboard({ user, onBack }) {
     );
   });
 
-  const download = (name, rows) => {
+  const download = async (name, rows) => {
+    const XLSX = await loadXlsx();
     const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ note: 'no data' }]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
