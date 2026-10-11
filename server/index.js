@@ -339,6 +339,35 @@ app.get('/api/ops/:table', async (req, res) => {
   }
 });
 
+// Bulk import rows into an ops table (Excel/CSV upload from the dashboard).
+const OPS_COLUMNS = {
+  ops_orders: ['order_id', 'order_date', 'customer_ref', 'product', 'sku', 'category', 'quantity', 'order_value', 'payment_status', 'fulfillment_status', 'expected_delivery', 'destination'],
+  ops_shipments: ['shipment_id', 'courier', 'order_id', 'destination', 'dispatch_date', 'status', 'expected_delivery', 'actual_delivery', 'exception'],
+  ops_batches: ['batch_id', 'product', 'sku', 'category', 'factory', 'planned_qty', 'completed_qty', 'stage', 'start_date', 'planned_completion', 'actual_completion', 'qc_status', 'defective_qty', 'rework_qty'],
+  ops_inventory: ['product', 'sku', 'category', 'size', 'color', 'warehouse', 'available', 'reserved', 'damaged', 'threshold'],
+  ops_returns: ['return_id', 'order_id', 'product', 'quantity', 'reason', 'request_date', 'approval_status', 'condition_result', 'decision'],
+  ops_refunds: ['refund_id', 'order_id', 'amount', 'reason', 'request_date', 'status', 'processed_date', 'payment_ref'],
+};
+
+app.post('/api/ops/:table/import', async (req, res) => {
+  const table = req.params.table;
+  const cols = OPS_COLUMNS[table];
+  if (!cols) return res.status(404).json({ error: 'unknown ops table' });
+  if (!supabase) return res.status(500).json({ error: 'no database' });
+  const rows = Array.isArray(req.body?.rows) ? req.body.rows : [];
+  if (!rows.length) return res.status(400).json({ error: 'no rows' });
+  const clean = rows.slice(0, 500).map((r) => {
+    const out = {};
+    for (const [k, v] of Object.entries(r)) {
+      const key = k.toLowerCase().trim().replace(/[\s\-\/]+/g, '_');
+      if (cols.includes(key) && v !== null && v !== undefined && v !== '') out[key] = v;
+    }
+    return out;
+  }).filter((r) => Object.keys(r).length);
+  const { error } = await supabase.from(table).insert(clean);
+  res.json({ ok: !error, inserted: error ? 0 : clean.length, error: error?.message });
+});
+
 // Support tickets for a customer email — dashboard view.
 app.get('/api/tickets', async (req, res) => {
   const email = String(req.query.email || '').trim();

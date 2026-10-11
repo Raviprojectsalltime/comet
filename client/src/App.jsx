@@ -150,7 +150,7 @@ export default function App() {
           <PressBar />
         </>
       )}
-      <Footer />
+      {page.name !== 'dashboard' && <Footer />}
 
       {cartOpen && (
         <CartDrawer
