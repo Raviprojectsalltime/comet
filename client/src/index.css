@@ -1495,35 +1495,65 @@ a {
   text-decoration: underline;
 }
 
-.chat-products {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 6px 0;
+/* horizontal scrollable purchase row */
+.chat-products-wrap {
+  margin: 8px 0 4px;
 }
 
-.chat-product-card {
+.chat-products-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.chat-product-row {
   display: flex;
-  gap: 12px;
-  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.chat-product-mini {
+  flex: 0 0 auto;
+  width: 128px;
   background: #fff;
   border: 1px solid #e6e6e6;
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 8px;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.chat-product-card:hover {
+.chat-product-mini:hover {
   border-color: var(--text);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
 }
 
-.chat-product-card img {
-  width: 56px;
-  height: 56px;
+.chat-product-mini img {
+  width: 100%;
+  height: 84px;
   object-fit: cover;
   border-radius: 8px;
+}
+
+.chat-product-mini b {
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.chat-product-mini span {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.cp-status {
+  color: var(--comet-red) !important;
+  font-weight: 700;
 }
 
 .cp-info {
@@ -1544,6 +1574,35 @@ a {
 .cp-order {
   color: var(--comet-red) !important;
   font-weight: 600;
+}
+
+/* typing indicator — three bouncing dots */
+.chat-typing {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 14px 16px !important;
+}
+
+.chat-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #999;
+  animation: typing-dot 1.2s infinite ease-in-out;
+}
+
+.chat-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.chat-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
 }
 
 /* ---------- Toast ---------- */

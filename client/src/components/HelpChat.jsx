@@ -1,37 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 
-const TOPICS = [
-  'My purchased product has an issue',
-  'I need help with shoe care',
-  'I have a delivery or order issue',
-  'I want to know about returns or refunds',
-  'I have another question',
-];
-
-const TOPIC_MESSAGES = {
-  'My purchased product has an issue': 'My purchased product has an issue',
-  'I need help with shoe care': 'How do I take care of my shoes?',
-  'I have a delivery or order issue': 'I have a delivery or order issue',
-  'I want to know about returns or refunds': 'I want to know about returns or refunds',
-  'I have another question': '',
+const nameFromEmail = (email = '') => {
+  const n = email.split('@')[0].replace(/[^a-zA-Z]/g, '');
+  return n ? n[0].toUpperCase() + n.slice(1) : 'Cometeer';
 };
 
-function newConversation() {
-  return [
-    {
-      from: 'bot',
-      text: "Hi! Welcome to Comet Support. How can we help you today? You can ask us about your products, orders, delivery, shoe care, or any issue you're experiencing.",
-    },
-  ];
-}
-
 export default function HelpChat({ open, onClose, user, onLogin }) {
-  const [messages, setMessages] = useState(newConversation);
+  const greeting = user
+    ? `Hi ${nameFromEmail(user.email)}! Welcome to Comet Support. How can we help you today? You can ask about your products, orders, delivery, shoe care, or any issue you're experiencing.`
+    : "Hi! Welcome to Comet Support. How can we help you today? You can ask about our products, delivery, shoe care, or any issue you're experiencing.";
+
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [stage, setStage] = useState('topics'); // topics | products | chat | resolving | escalate-offer | anything-else | rating | done
+  const [stage, setStage] = useState('chat'); // chat | resolving | escalate-offer | anything-else | rating | done
   const [product, setProduct] = useState(null);
-  const [orders, setOrders] = useState(null); // null = not fetched
+  const [orders, setOrders] = useState(null);
+  const [showProducts, setShowProducts] = useState(false);
   const [lastCategory, setLastCategory] = useState(null);
   const [unresolved, setUnresolved] = useState(0);
   const [escEmail, setEscEmail] = useState('');
@@ -40,20 +25,26 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
   const listRef = useRef(null);
   const fileRef = useRef(null);
 
+  // On open: greet by name and fetch verified purchases for the product row.
   useEffect(() => {
     if (!open) return;
+    setMessages([{ from: 'bot', text: greeting }]);
     if (user?.email) {
       setEscEmail(user.email);
       fetch(`/api/orders?email=${encodeURIComponent(user.email)}`)
         .then((r) => r.json())
-        .then((o) => setOrders(Array.isArray(o) ? o : []))
+        .then((o) => {
+          const list = Array.isArray(o) ? o : [];
+          setOrders(list);
+          setShowProducts(list.length > 0);
+        })
         .catch(() => setOrders([]));
     }
   }, [open, user]);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, sending, stage]);
+  }, [messages, sending, stage, showProducts]);
 
   const push = (m) => setMessages((ms) => [...ms, m]);
 
@@ -61,7 +52,7 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
     const msg = (text ?? input).trim();
     if ((!msg && !image) || sending) return;
     setInput('');
-    setStage('chat');
+    setShowProducts(false);
     const userMsg = { from: 'user', text: msg, image: image || undefined };
     push(userMsg);
     setSending(true);
@@ -110,34 +101,13 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
 
   const selectProduct = (item, order) => {
     setProduct({ ...item, orderId: order.orderId, orderDate: order.date, orderStatus: order.status });
+    setShowProducts(false);
     push({ from: 'user', text: `I need help with my ${item.silhouette} ${item.title}` });
     push({
       from: 'bot',
-      text: `Got it — your ${item.silhouette} ${item.title} (${item.color}, UK ${item.size}) from order ${order.orderId}. What issue are you experiencing with this product?`,
+      text: `Got it — your ${item.silhouette} ${item.title} (${item.color}, UK ${item.size}) from order ${order.orderId}, ${order.status.toLowerCase()} on ${new Date(order.date).toLocaleDateString('en-IN')}. What issue are you facing with this product?`,
     });
     setStage('chat');
-  };
-
-  const wantProductHelp = () => {
-    if (!user) {
-      push({
-        from: 'bot',
-        text: 'To pull up your purchases, please log in first — then I can show your orders right here. You can still ask general questions meanwhile.',
-      });
-      setStage('chat');
-      return;
-    }
-    if (orders === null) return; // still loading
-    if (orders.length === 0) {
-      push({
-        from: 'bot',
-        text: "I couldn't find any purchases on this account yet — but I can still help! Tell me which product and what's going on.",
-      });
-      setStage('chat');
-      return;
-    }
-    push({ from: 'bot', text: 'Here are your purchases — which one do you need help with?' });
-    setStage('products');
   };
 
   const resolved = (yes) => {
@@ -221,10 +191,11 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
   };
 
   const reset = () => {
-    setMessages(newConversation());
-    setStage('topics');
+    setMessages([{ from: 'bot', text: greeting }]);
+    setStage('chat');
     setUnresolved(0);
     setProduct(null);
+    setShowProducts((orders || []).length > 0);
   };
 
   if (!open) return null;
@@ -234,7 +205,7 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
       <div className="chat-header">
         <div>
           <div className="title">Comet Support</div>
-          <div className="sub">{user ? `Signed in as ${user.email}` : 'Guest · sign in for order help'}</div>
+          <div className="sub">{user ? `Welcome, ${nameFromEmail(user.email)}` : 'Guest · log in for order help'}</div>
         </div>
         <button className="chat-close" onClick={onClose} aria-label="Close help chat">×</button>
       </div>
@@ -246,7 +217,7 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
             <b>{product.silhouette} {product.title}</b>
             <span>{product.color} · UK {product.size} · {product.orderId}</span>
           </div>
-          <button onClick={wantProductHelp}>Change</button>
+          <button onClick={() => setShowProducts(true)}>Change</button>
         </div>
       )}
 
@@ -264,45 +235,31 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
             </div>
           )
         )}
-        {sending && <div className="chat-msg bot">Typing…</div>}
-
-        {stage === 'topics' && (
-          <div className="chat-chips">
-            {TOPICS.map((t) => (
-              <button
-                key={t}
-                className="chat-chip"
-                onClick={() =>
-                  t === 'My purchased product has an issue'
-                    ? wantProductHelp()
-                    : TOPIC_MESSAGES[t]
-                      ? send(TOPIC_MESSAGES[t])
-                      : setStage('chat')
-                }
-              >
-                {t}
-              </button>
-            ))}
+        {sending && (
+          <div className="chat-msg bot chat-typing">
+            <span /><span /><span />
           </div>
         )}
 
-        {stage === 'products' && orders && (
-          <div className="chat-products">
-            {orders.map((o) =>
-              o.items.map((it, idx) => (
-                <button key={`${o.orderId}-${idx}`} className="chat-product-card" onClick={() => selectProduct(it, o)}>
-                  {it.image && <img src={it.image} alt={it.title} />}
-                  <div className="cp-info">
+        {showProducts && orders && orders.length > 0 && (
+          <div className="chat-products-wrap">
+            <div className="chat-products-label">Your purchases — tap one for help</div>
+            <div className="chat-product-row">
+              {orders.map((o) =>
+                o.items.map((it, idx) => (
+                  <button
+                    key={`${o.orderId}-${idx}`}
+                    className="chat-product-mini"
+                    onClick={() => selectProduct(it, o)}
+                  >
+                    {it.image && <img src={it.image} alt={it.title} />}
                     <b>{it.silhouette} {it.title}</b>
-                    <span>{it.color} · UK {it.size}</span>
-                    <span className="cp-order">{o.orderId} · {new Date(o.date).toLocaleDateString('en-IN')} · {o.status}</span>
-                  </div>
-                </button>
-              ))
-            )}
-            <button className="chat-chip" onClick={() => { push({ from: 'bot', text: 'No problem — just tell me which product and what the issue is.' }); setStage('chat'); }}>
-              None of these / other
-            </button>
+                    <span>UK {it.size} · {o.orderId}</span>
+                    <span className="cp-status">{o.status}</span>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         )}
 
