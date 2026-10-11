@@ -121,7 +121,7 @@ export function answer({ message, history = [], product }) {
 // Build the escalation email per the PRD's required structure.
 export function buildEscalationEmail({ email, product, history = [], category }) {
   const now = new Date();
-  const ticket = `CMT-${now.getTime().toString(36).toUpperCase()}`;
+  const ticket = String(10000000 + Math.floor(Math.random() * 89999999));
   const userMsgs = history.filter((m) => m.from === 'user' && m.text);
   const botMsgs = history.filter((m) => m.from === 'bot' && m.text);
   const images = history.filter((m) => m.image).length;

@@ -7,6 +7,31 @@ export async function sendSupportEmail({ to, subject, body, replyTo, supabase })
   const key = process.env.RESEND_API_KEY;
   if (key) return sendViaResend({ key, to, subject, body, replyTo });
 
+  // Gmail SMTP via nodemailer — needs an App Password, not the real one:
+  // Google Account → Security → App passwords (requires 2-Step Verification).
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      const nodemailer = (await import('nodemailer')).default;
+      const t = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: Number(process.env.SMTP_PORT) || 465,
+        secure: true,
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      });
+      await t.sendMail({
+        from: `"Comet Support Bot" <${process.env.SMTP_USER}>`,
+        to,
+        replyTo,
+        subject,
+        text: body,
+      });
+      return { sent: true };
+    } catch (e) {
+      console.error('SMTP send failed:', e.message);
+      return { sent: false, reason: 'smtp_failed' };
+    }
+  }
+
   // Fall back to the edge function (it owns the RESEND_API_KEY secret).
   if (supabase) {
     try {

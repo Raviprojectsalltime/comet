@@ -178,10 +178,10 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
       push({
         from: 'bot',
         text: data.emailSent
-          ? `Done! I've emailed your case to our support team (${data.to}). Ticket ${data.ticket}. They'll reply to ${escEmail.trim()} shortly.`
-          : `Done! Your case is filed as ticket ${data.ticket} with our support team. They'll reply to ${escEmail.trim()} shortly.`,
+          ? `Done! Your ticket number is ${data.ticket} and I've emailed your case to our support team. They'll get back to ${escEmail.trim()} within 12–24 hours. Meanwhile, feel free to keep chatting or ask anything else.`
+          : `Done! Your ticket number is ${data.ticket} and your case is filed with our support team. They'll get back to ${escEmail.trim()} within 12–24 hours. Meanwhile, feel free to keep chatting or ask anything else.`,
       });
-      setStage('done');
+      setStage('chat');
     } catch (e) {
       push({ from: 'bot', text: `I couldn't send that just now (${e.message}). You can also reach us on WhatsApp +91 9606081463.` });
       setStage('chat');
