@@ -1,16 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import knowledgeJson from './knowledge.json' with { type: 'json' };
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-let articles = [];
-try {
-  articles = JSON.parse(
-    fs.readFileSync(path.join(__dirname, 'knowledge.json'), 'utf-8')
-  );
-} catch (e) {
-  console.error('knowledge.json unreadable (relying on Supabase KB):', e.message);
-}
+let articles = knowledgeJson;
 
 // Swap in articles loaded from the knowledge_articles table at boot.
 export function setArticles(list) {

@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { answer, buildEscalationEmail, setArticles, getArticles } from './chat.js';
 import { llmReply, llmText } from './ai.js';
 import { sendSupportEmail } from './email.js';
+import productsJson from './products.json' with { type: 'json' };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -31,15 +32,7 @@ const supabase =
     ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY)
     : null;
 
-const safeJson = (file) => {
-  try {
-    return JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf-8'));
-  } catch (e) {
-    console.error(`Could not read ${file} (continuing without it):`, e.message);
-    return [];
-  }
-};
-const fallbackProducts = safeJson('products.json');
+const fallbackProducts = productsJson;
 const knowledgeBase = {
   find: (fn) => getArticles().find(fn),
 };
