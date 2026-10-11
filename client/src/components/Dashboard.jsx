@@ -137,6 +137,7 @@ function UploadBar({ tables, onUploaded }) {
 export default function Dashboard({ user, onBack }) {
   const [tab, setTab] = useState('overview');
   const [data, setData] = useState({});
+  const [insights, setInsights] = useState(null);
   const [refreshed, setRefreshed] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -149,6 +150,7 @@ export default function Dashboard({ user, onBack }) {
         setData({ orders, shipments, batches, inventory, returns, refunds });
         setRefreshed(new Date());
       });
+    fetch('/api/ops/insights').then((r) => r.json()).then((d) => setInsights(d)).catch(() => {});
   };
   useEffect(load, []);
 
@@ -263,6 +265,23 @@ export default function Dashboard({ user, onBack }) {
               <div className="chart-card"><h4>Revenue — last 14 days</h4><BarChart data={m.days} /></div>
               <div className="chart-card"><h4>Orders by status</h4><Donut data={m.byStatus} /></div>
               <div className="chart-card"><h4>Revenue by category</h4><HBars data={m.byCat} /></div>
+            </div>
+            <div className="insights-card">
+              <div className="insights-head">
+                <h4>Key Insights</h4>
+                <span className={`insights-src ${insights?.source || ''}`}>
+                  {insights === null ? 'Analyzing…' : insights.source === 'ai' ? 'AI analysis' : 'Computed'}
+                </span>
+              </div>
+              {insights === null ? (
+                <div className="insights-loading">
+                  <span /><span /><span /> Crunching operations data…
+                </div>
+              ) : (
+                <ul className="insights-list">
+                  {insights.insights.map((t, i) => <li key={i}>{t}</li>)}
+                </ul>
+              )}
             </div>
           </>
         )}

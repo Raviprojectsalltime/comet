@@ -4,7 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import { answer, buildEscalationEmail, setArticles, getArticles } from './chat.js';
-import { llmReply } from './ai.js';
+import { llmReply, llmText } from './ai.js';
 import { sendSupportEmail } from './email.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -322,6 +322,78 @@ app.post('/api/chat/rating', async (req, res) => {
 // tables, independent from the customer-facing catalog/orders.
 const OPS_TABLES = ['ops_orders', 'ops_shipments', 'ops_batches', 'ops_inventory', 'ops_returns', 'ops_refunds'];
 
+// AI-generated stakeholder insights — computes real metrics from the
+// ops tables and has the LLM phrase them; falls back to templates.
+app.get('/api/ops/insights', async (_req, res) => {
+  if (!supabase) return res.json({ insights: [], source: 'none' });
+  try {
+    const [o, s, b, inv, ret, ref] = await Promise.all(
+      OPS_TABLES.map((t) => supabase.from(t).select('*').limit(1000))
+    );
+    const orders = o.data || [], shipments = s.data || [], batches = b.data || [];
+    const inventory = inv.data || [], returns = ret.data || [], refunds = ref.data || [];
+
+    const week = (d0, d1) => orders.filter((x) => {
+      const t = new Date(x.order_date);
+      return t >= d0 && t < d1;
+    });
+    const now = Date.now();
+    const thisWeek = week(new Date(now - 7 * 864e5), new Date(now));
+    const lastWeek = week(new Date(now - 14 * 864e5), new Date(now - 7 * 864e5));
+    const sum = (a, k) => a.reduce((x, y) => x + (y[k] || 0), 0);
+    const pct = (a, b) => (b ? Math.round(((a - b) / b) * 100) : a ? 100 : 0);
+
+    const stats = {
+      gross_this_week: sum(thisWeek, 'order_value'),
+      gross_last_week: sum(lastWeek, 'order_value'),
+      orders_this_week: thisWeek.length,
+      orders_last_week: lastWeek.length,
+      revenue_change_pct: pct(sum(thisWeek, 'order_value'), sum(lastWeek, 'order_value')),
+      orders_change_pct: pct(thisWeek.length, lastWeek.length),
+      total_orders: orders.length,
+      delivered: orders.filter((x) => x.fulfillment_status === 'Delivered').length,
+      cancelled: orders.filter((x) => x.fulfillment_status === 'Cancelled').length,
+      late_shipments: shipments.filter((x) => x.exception === 'Late delivery').length,
+      failed_shipments: shipments.filter((x) => x.status === 'Delivery Failed').length,
+      courier_fails: shipments.filter((x) => x.status === 'Delivery Failed').map((x) => x.courier),
+      units_in_production: sum(batches, 'planned_qty') - sum(batches, 'completed_qty'),
+      defective_units: sum(batches, 'defective_qty'),
+      defect_by_factory: batches.reduce((m, x) => { m[x.factory] = (m[x.factory] || 0) + (x.defective_qty || 0); return m; }, {}),
+      delayed_batches: batches.filter((x) => !x.actual_completion && new Date(x.planned_completion) < new Date()).map((x) => `${x.batch_id} (${x.product}, ${x.factory})`),
+      low_stock: inventory.filter((x) => x.available < x.threshold).map((x) => `${x.sku}@${x.warehouse}: ${x.available}`),
+      out_of_stock: inventory.filter((x) => x.available === 0).map((x) => `${x.sku}@${x.warehouse}`),
+      returns_pending: returns.filter((x) => x.approval_status === 'Pending').length,
+      refunds_pending: refunds.filter((x) => x.status !== 'Completed').length,
+      refunds_pending_amount: sum(refunds.filter((x) => x.status !== 'Completed'), 'amount'),
+    };
+    const worstFactory = Object.entries(stats.defect_by_factory).sort((a, b) => b[1] - a[1])[0];
+    const worstCourier = stats.courier_fails.length
+      ? Object.entries(stats.courier_fails.reduce((m, c) => { m[c] = (m[c] || 0) + 1; return m; }, {})).sort((a, b) => b[1] - a[1])[0][0]
+      : null;
+
+    // Deterministic fallback bullets — always available.
+    const fallback = [
+      `Revenue is ${stats.revenue_change_pct >= 0 ? 'up' : 'down'} ${Math.abs(stats.revenue_change_pct)}% week-over-week (₹${fmtI(stats.gross_this_week)} vs ₹${fmtI(stats.gross_last_week)}), with ${stats.orders_this_week} orders vs ${stats.orders_last_week}.`,
+      `${stats.late_shipments} shipments delivered late and ${stats.failed_shipments} failed${worstCourier ? ` — ${worstCourier} has the most failures` : ''}.`,
+      `${fmtI(stats.defective_units)} defective units across factories${worstFactory ? ` — ${worstFactory[0]} leads with ${worstFactory[1]}` : ''}; ${stats.delayed_batches.length} batches past their planned completion.`,
+      `${stats.low_stock.length} SKUs below threshold and ${stats.out_of_stock.length} fully out of stock — replenish soon.`,
+      `${stats.refunds_pending} refunds pending (₹${fmtI(stats.refunds_pending_amount)}) and ${stats.returns_pending} returns awaiting approval.`,
+    ];
+
+    let insights = null;
+    const prompt = `Here are this week's operations metrics for a sneaker company (JSON):\n${JSON.stringify(stats, null, 1)}\n\nWrite 5 concise bullet insights for executives — each ONE line, each with concrete numbers, plain text starting with "- ". Cover: sales trend vs last week, delivery/shipment issues, manufacturing + worst factory, stock risks, returns/refunds. No intro, no headers.`;
+    const ai = await llmText('You are an operations analyst writing short executive bullet points. Use only the numbers given. No dashes as separators mid-sentence; keep each bullet one clean line.', prompt);
+    if (ai) {
+      insights = ai.split('\n').map((l) => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean).slice(0, 6);
+    }
+    res.json({ insights: insights?.length ? insights : fallback, source: insights?.length ? 'ai' : 'computed', generatedAt: new Date().toISOString() });
+  } catch (e) {
+    console.error('Insights error:', e.message);
+    res.json({ insights: [], source: 'error' });
+  }
+});
+function fmtI(n) { return Number(n || 0).toLocaleString('en-IN'); }
+
 app.get('/api/ops/:table', async (req, res) => {
   const table = req.params.table;
   if (!OPS_TABLES.includes(table)) return res.status(404).json({ error: 'unknown ops table' });
@@ -367,6 +439,7 @@ app.post('/api/ops/:table/import', async (req, res) => {
   const { error } = await supabase.from(table).insert(clean);
   res.json({ ok: !error, inserted: error ? 0 : clean.length, error: error?.message });
 });
+
 
 // Support tickets for a customer email — dashboard view.
 app.get('/api/tickets', async (req, res) => {

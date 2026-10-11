@@ -17,6 +17,38 @@ STRICT RULES — follow them exactly:
 - If a follow-up question is listed for the article, end your reply by asking it naturally.
 - Prices: X Lows ₹4,299+, Aeon V2 ₹4,499+, Aeres ₹5,299+, Hukum ₹5,899. Support email: hello@wearcomet.com, WhatsApp +91 9606081463.`;
 
+// Generic one-shot LLM call — used for dashboard insights.
+export async function llmText(systemPrompt, userPrompt) {
+  const { key, url, model } = conf();
+  if (!key) return null;
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch(url, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        stream: false,
+      }),
+    });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 // Call the LLM with the grounded context. Returns reply text or null on failure.
 export async function llmReply({ article, message, history, product, orders, email, image }) {
   const { key, url, model } = conf();
