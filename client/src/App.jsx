@@ -36,7 +36,7 @@ export default function App() {
   useEffect(() => {
     fetch('/api/products')
       .then((r) => r.json())
-      .then(setProducts)
+      .then((d) => setProducts(Array.isArray(d) ? d : []))
       .catch(() => setProducts([]));
   }, []);
 

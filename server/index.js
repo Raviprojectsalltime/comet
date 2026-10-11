@@ -31,9 +31,15 @@ const supabase =
     ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY)
     : null;
 
-const fallbackProducts = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'products.json'), 'utf-8')
-);
+const safeJson = (file) => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf-8'));
+  } catch (e) {
+    console.error(`Could not read ${file} (continuing without it):`, e.message);
+    return [];
+  }
+};
+const fallbackProducts = safeJson('products.json');
 const knowledgeBase = {
   find: (fn) => getArticles().find(fn),
 };

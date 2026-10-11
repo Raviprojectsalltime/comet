@@ -3,9 +3,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-let articles = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'knowledge.json'), 'utf-8')
-);
+let articles = [];
+try {
+  articles = JSON.parse(
+    fs.readFileSync(path.join(__dirname, 'knowledge.json'), 'utf-8')
+  );
+} catch (e) {
+  console.error('knowledge.json unreadable (relying on Supabase KB):', e.message);
+}
 
 // Swap in articles loaded from the knowledge_articles table at boot.
 export function setArticles(list) {
