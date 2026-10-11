@@ -1,0 +1,80 @@
+[
+  {
+    "id": "cortado",
+    "name": "Cortado",
+    "title": "CORTADO",
+    "silhouette": "X Lows",
+    "price": 4299,
+    "badge": "EXCLUSIVE PRICE",
+    "color": "Cream Canvas",
+    "tags": ["casual", "college", "daily", "everyday", "men", "boyfriend", "date", "neutral"],
+    "image": "/images/cortado.jpg",
+    "hoverImage": "/images/cortado-hover.jpg",
+    "sizes": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  },
+  {
+    "id": "hukum-midnight",
+    "name": "Hukum Midnight",
+    "title": "HUKUM MIDNIGHT",
+    "silhouette": "Aeres",
+    "price": 5899,
+    "badge": "PRE-ORDER NOW",
+    "color": "Aeres Black Gold",
+    "tags": ["party", "designer", "design", "trendy", "special", "gift", "date", "statement", "night"],
+    "image": "/images/hukum-midnight.jpg",
+    "hoverImage": "/images/hukum-midnight-hover.jpg",
+    "sizes": [4, 5, 6, 7, 8, 9, 10, 11, 12]
+  },
+  {
+    "id": "hukum-ivory",
+    "name": "Hukum Ivory",
+    "title": "HUKUM IVORY",
+    "silhouette": "Aeres",
+    "price": 5899,
+    "badge": "PRE-ORDER NOW",
+    "color": "Aeres Cream Gold",
+    "tags": ["party", "designer", "design", "trendy", "special", "gift", "date", "wedding", "statement"],
+    "image": "/images/hukum-ivory.jpg",
+    "hoverImage": "/images/hukum-ivory-hover.jpg",
+    "sizes": [4, 5, 6, 7, 8, 9, 10, 11, 12]
+  },
+  {
+    "id": "wild-bloom",
+    "name": "Wild Bloom",
+    "title": "WILD BLOOM",
+    "silhouette": "Astra",
+    "price": 4899,
+    "badge": "PRE-ORDER NOW",
+    "color": "Astra Purple White",
+    "tags": ["women", "girl", "gift", "party", "date", "trendy", "casual", "college"],
+    "image": "/images/wild-bloom.jpg",
+    "hoverImage": "/images/wild-bloom-hover.jpg",
+    "sizes": [3, 4, 5, 6, 7]
+  },
+  {
+    "id": "cobalt",
+    "name": "Cobalt",
+    "title": "COBALT",
+    "silhouette": "Aeres",
+    "price": 5299,
+    "badge": "EXCLUSIVE PRICE",
+    "color": "Aeres Navy White",
+    "tags": ["sport", "gym", "college", "casual", "daily", "men", "boyfriend"],
+    "image": "/images/cobalt.jpg",
+    "hoverImage": "/images/cobalt-hover.jpg",
+    "sizes": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  },
+  {
+    "id": "madagascar",
+    "name": "Madagascar",
+    "title": "MADAGASCAR",
+    "silhouette": "X Lows",
+    "price": 4299,
+    "badge": null,
+    "color": "Multi Blue",
+    "tags": ["casual", "college", "sport", "travel", "colorful", "men", "boyfriend", "date"],
+    "image": "/images/madagascar.jpg",
+    "hoverImage": "/images/madagascar-hover.jpg",
+    "sizes": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  }
+]
