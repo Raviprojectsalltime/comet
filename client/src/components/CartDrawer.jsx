@@ -1,5 +1,30 @@
+import { useState } from 'react';
+
 export default function CartDrawer({ items, onClose, onRemove, onCheckout }) {
+  const [placed, setPlaced] = useState(false);
   const total = items.reduce((sum, i) => sum + i.price, 0);
+
+  if (placed) {
+    return (
+      <>
+        <div className="drawer-backdrop" onClick={onClose} />
+        <aside className="cart-drawer">
+          <div className="cart-header">
+            ORDER PLACED
+            <button className="cart-close" onClick={onClose} aria-label="Close cart">×</button>
+          </div>
+          <div className="cart-items order-placed">
+            <div className="order-tick">✓</div>
+            <p className="order-title">Thanks, Cometeer!</p>
+            <p className="order-sub">
+              Your order is confirmed. We'll WhatsApp you the tracking details shortly.
+            </p>
+            <button className="btn-dark" onClick={onClose}>CONTINUE SHOPPING</button>
+          </div>
+        </aside>
+      </>
+    );
+  }
 
   return (
     <>
@@ -41,7 +66,15 @@ export default function CartDrawer({ items, onClose, onRemove, onCheckout }) {
               <span>Subtotal</span>
               <span>₹ {total.toLocaleString('en-IN')}</span>
             </div>
-            <button className="btn-checkout" onClick={onCheckout}>CHECKOUT</button>
+            <button
+              className="btn-checkout"
+              onClick={() => {
+                onCheckout();
+                setPlaced(true);
+              }}
+            >
+              CHECKOUT
+            </button>
           </div>
         )}
       </aside>

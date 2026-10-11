@@ -113,7 +113,7 @@ export default function App() {
           items={cart}
           onClose={() => setCartOpen(false)}
           onRemove={removeFromCart}
-          onCheckout={() => showToast('Checkout is coming soon!')}
+          onCheckout={() => setCart([])}
         />
       )}
 
