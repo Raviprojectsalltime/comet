@@ -8,6 +8,7 @@
     "start": "NODE_ENV=production node index.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "express": "^4.21.2"
   }
 }

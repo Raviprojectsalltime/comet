@@ -4,6 +4,21 @@ export default function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
+  const subscribe = async () => {
+    if (!email) return;
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.ok) setSubscribed(true);
+    } catch {
+      // keep the UI quiet on network errors
+    }
+  };
+
   return (
     <footer className="footer">
       <div className="footer-grid">
@@ -44,7 +59,7 @@ export default function Footer() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <button onClick={() => email && setSubscribed(true)}>JOIN</button>
+              <button onClick={subscribe}>JOIN</button>
             </div>
           )}
           <div className="store-badges">
