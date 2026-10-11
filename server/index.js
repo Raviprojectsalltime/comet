@@ -317,6 +317,25 @@ app.post('/api/chat/rating', async (req, res) => {
   res.json({ ok: true });
 });
 
+// Support tickets for a customer email — dashboard view.
+app.get('/api/tickets', async (req, res) => {
+  const email = String(req.query.email || '').trim();
+  if (!email || !supabase) return res.json([]);
+  try {
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .select('ticket,email,subject,category,status,created_at')
+      .eq('email', email)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e) {
+    if (!isMissingTable(e)) console.error('Tickets fetch error:', e.message);
+    res.json([]);
+  }
+});
+
 // Orders for a customer email — used by the chatbot to show
 // purchased products for logged-in customers. Items are enriched
 // with verified catalog data (image, colour) so the chat cards

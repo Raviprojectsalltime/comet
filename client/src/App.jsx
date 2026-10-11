@@ -10,6 +10,7 @@ import Footer from './components/Footer.jsx';
 import CartDrawer from './components/CartDrawer.jsx';
 import SearchPanel from './components/SearchPanel.jsx';
 import SearchResults from './components/SearchResults.jsx';
+import Dashboard from './components/Dashboard.jsx';
 import LoginModal from './components/LoginModal.jsx';
 import QuickAddModal from './components/QuickAddModal.jsx';
 import HelpChat from './components/HelpChat.jsx';
@@ -102,6 +103,9 @@ export default function App() {
         onLogout={handleLogout}
         user={user}
         onHelp={() => setChatOpen(true)}
+        onDashboard={() =>
+          user ? setPage({ name: 'dashboard' }) : setLoginOpen(true)
+        }
         onShopMen={scrollToProducts}
         onShopWomen={scrollToProducts}
         onHome={goHome}
@@ -122,7 +126,9 @@ export default function App() {
         }}
       />
 
-      {page.name === 'search' ? (
+      {page.name === 'dashboard' ? (
+        <Dashboard user={user} onBack={goHome} />
+      ) : page.name === 'search' ? (
         <SearchResults
           query={page.query}
           products={products}

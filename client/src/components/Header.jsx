@@ -1,7 +1,7 @@
 const SNEAKERS_MEN = ['Shop All', 'X Lows', 'Aeon', 'Apex', 'Aeres', 'Hukum'];
 const SNEAKERS_WOMEN = ['Shop All', 'X Lows', 'Astra', 'Aeon', 'Apex', 'Aeres', 'Hukum'];
 
-export default function Header({ cartCount, onCart, onSearch, onLogin, onLogout, user, onHelp, onShopMen, onShopWomen, onHome }) {
+export default function Header({ cartCount, onCart, onSearch, onLogin, onLogout, user, onHelp, onDashboard, onShopMen, onShopWomen, onHome }) {
   return (
     <header className="header">
       <a className="header-logo" href="/" onClick={(e) => { e.preventDefault(); onHome?.(); }}>COMET</a>
@@ -33,6 +33,7 @@ export default function Header({ cartCount, onCart, onSearch, onLogin, onLogout,
 
       <div className="header-icons">
         <button className="help-btn" onClick={onHelp}>Help</button>
+        <button className="help-btn" onClick={onDashboard}>Dashboard</button>
         <div className="account-wrap">
           <button className="icon-btn" onClick={user ? undefined : onLogin} aria-label="Account">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
