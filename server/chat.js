@@ -3,9 +3,24 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const articles = JSON.parse(
+let articles = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'knowledge.json'), 'utf-8')
 );
+
+// Swap in articles loaded from the knowledge_articles table at boot.
+export function setArticles(list) {
+  if (Array.isArray(list) && list.length) {
+    articles = list.map((a) => ({
+      ...a,
+      followUp: a.followUp ?? a.follow_up,
+      escalateIfUnresolved: a.escalateIfUnresolved ?? a.escalate_if_unresolved,
+    }));
+  }
+}
+
+export function getArticles() {
+  return articles;
+}
 
 // Intent categories → regex triggers. Order matters: specific before general.
 const INTENTS = [

@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
-import { answer, buildEscalationEmail } from './chat.js';
+import { answer, buildEscalationEmail, setArticles, getArticles } from './chat.js';
 import { llmReply } from './ai.js';
 import { sendSupportEmail } from './email.js';
 
@@ -34,12 +34,30 @@ const supabase =
 const fallbackProducts = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'products.json'), 'utf-8')
 );
-const knowledgeBase = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'knowledge.json'), 'utf-8')
-);
+const knowledgeBase = {
+  find: (fn) => getArticles().find(fn),
+};
 
 const isMissingTable = (err) =>
   err && (err.code === '42P01' || /does not exist|Could not find the table/i.test(err.message || ''));
+
+// Load the chatbot knowledge base from Supabase at boot (falls back
+// silently to the bundled knowledge.json when the table is absent).
+let kbSource = 'file';
+if (supabase) {
+  try {
+    const { data } = await supabase
+      .from('knowledge_articles')
+      .select('*')
+      .eq('published', true);
+    if (data?.length) {
+      setArticles(data);
+      kbSource = 'supabase';
+    }
+  } catch (e) {
+    if (!isMissingTable(e)) console.error('KB load error:', e.message);
+  }
+}
 
 // ---------- API ----------
 
@@ -343,8 +361,8 @@ app.get('/api/orders', async (req, res) => {
 // Health check for the Supabase connection + required tables.
 app.get('/api/health/supabase', async (_req, res) => {
   if (!supabase) return res.json({ connected: false, reason: 'missing_env' });
-  const status = { connected: true, url: SUPABASE_URL, tables: {} };
-  for (const table of ['products', 'newsletter_subscribers', 'chat_messages']) {
+  const status = { connected: true, url: SUPABASE_URL, tables: {}, knowledgeSource: kbSource };
+  for (const table of ['products', 'newsletter_subscribers', 'chat_messages', 'knowledge_articles', 'support_tickets', 'orders']) {
     const { data, error } = await supabase.from(table).select('*').limit(1);
     status.tables[table] = error
       ? isMissingTable(error)
