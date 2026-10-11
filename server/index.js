@@ -528,7 +528,13 @@ if (fs.existsSync(distDir)) {
   app.get('*', (_req, res) => res.sendFile(path.join(distDir, 'index.html')));
 }
 
-app.listen(PORT, () => {
-  console.log(`Comet server running on http://localhost:${PORT}`);
-  console.log(`Supabase: ${supabase ? SUPABASE_URL : 'not configured'}`);
-});
+export { app };
+
+// Only listen when run directly — on Netlify the app is wrapped by
+// the serverless function in netlify/functions/api.mjs instead.
+if (!process.env.NETLIFY && !process.env.LAMBDA_TASK_ROOT) {
+  app.listen(PORT, () => {
+    console.log(`Comet server running on http://localhost:${PORT}`);
+    console.log(`Supabase: ${supabase ? SUPABASE_URL : 'not configured'}`);
+  });
+}
