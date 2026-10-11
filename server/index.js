@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import { answer, buildEscalationEmail } from './chat.js';
 import { llmReply } from './ai.js';
+import { sendSupportEmail } from './email.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -259,7 +260,18 @@ app.post('/api/chat/escalate', async (req, res) => {
     console.log(`--- ESCALATION ${ticket} ---\n${subject}\n${body}`);
   }
 
-  res.json({ ok: true, ticket, subject });
+  // Deliver the ticket to the configured support inbox. We report the
+  // real delivery status — the UI only says "sent" when the provider
+  // confirms it; otherwise the ticket is still safely stored.
+  const supportTo = process.env.SUPPORT_EMAIL || 'hello@wearcomet.com';
+  const { sent, reason } = await sendSupportEmail({
+    to: supportTo,
+    subject,
+    body,
+    replyTo: email,
+  });
+
+  res.json({ ok: true, ticket, subject, emailSent: sent, to: sent ? supportTo : undefined, emailReason: reason });
 });
 
 // Store the post-resolution satisfaction rating.

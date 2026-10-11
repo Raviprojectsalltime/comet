@@ -207,7 +207,9 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
       if (!res.ok) throw new Error(data.error);
       push({
         from: 'bot',
-        text: `Done — your case is with our support team. Ticket ${data.ticket}. They'll reply to ${escEmail.trim()} shortly.`,
+        text: data.emailSent
+          ? `Done — I've emailed your case to our support team (${data.to}). Ticket ${data.ticket}. They'll reply to ${escEmail.trim()} shortly.`
+          : `Done — your case is filed as ticket ${data.ticket} with our support team. They'll reply to ${escEmail.trim()} shortly.`,
       });
       setStage('done');
     } catch (e) {
