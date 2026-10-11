@@ -41,22 +41,26 @@ const knowledgeBase = {
 const isMissingTable = (err) =>
   err && (err.code === '42P01' || /does not exist|Could not find the table/i.test(err.message || ''));
 
-// Load the chatbot knowledge base from Supabase at boot (falls back
-// silently to the bundled knowledge.json when the table is absent).
+// Load the chatbot knowledge base from Supabase in the background —
+// never blocks startup; knowledge.json covers the gap meanwhile.
 let kbSource = 'file';
 if (supabase) {
-  try {
-    const { data } = await supabase
-      .from('knowledge_articles')
-      .select('*')
-      .eq('published', true);
-    if (data?.length) {
-      setArticles(data);
-      kbSource = 'supabase';
-    }
-  } catch (e) {
-    if (!isMissingTable(e)) console.error('KB load error:', e.message);
-  }
+  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('kb_timeout')), 8000));
+  Promise.race([
+    supabase.from('knowledge_articles').select('*').eq('published', true),
+    timeout,
+  ])
+    .then(({ data, error }) => {
+      if (error) {
+        if (!isMissingTable(error)) console.error('KB load error:', error.message);
+        return;
+      }
+      if (data?.length) {
+        setArticles(data);
+        kbSource = 'supabase';
+      }
+    })
+    .catch((e) => console.error('KB load skipped:', e.message));
 }
 
 // ---------- API ----------

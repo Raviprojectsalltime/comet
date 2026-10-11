@@ -120,20 +120,42 @@ export function answer({ message, history = [], product }) {
     };
   }
 
+  // Explicit request for a human → escalate right away.
+  if (/\b(human|agent|real person|talk to someone|customer care|representative|speak to)\b/i.test(text)) {
+    return {
+      reply:
+        "Of course — I can send this whole conversation to our support team right now so a human can take over. Shall I?",
+      category: 'escalate-request',
+      offerEscalation: true,
+      resolvable: false,
+    };
+  }
+
   // Clarifying prompts when intent is known but vague.
   if (intent?.id === 'delivery-tracking' || /order/i.test(text)) {
     return {
       reply:
-        'I can help with that — could you share your order number? If you\'re logged in, I can also pull up your recent orders.',
+        "I can help with that — could you share your order number? If you're logged in, I can also pull up your recent orders.",
       category: 'clarify',
       resolvable: false,
     };
   }
 
-  // No reliable knowledge — do NOT invent an answer. Offer escalation.
+  // Shoe/support-adjacent but unclear → ask ONE clarifying question
+  // instead of jumping to a ticket.
+  if (/shoe|sneaker|comet|order|pair|lace|sole|size|colour|color|product|help|issue|problem/i.test(text)) {
+    return {
+      reply:
+        "Happy to help! Just so I get you the right answer — is this about a product issue, an order/delivery question, or something else? A little detail goes a long way.",
+      category: 'clarify',
+      resolvable: false,
+    };
+  }
+
+  // Clearly off-topic with no context — offer escalation.
   return {
     reply:
-      "I want to make sure you get the right answer rather than a guess — this one needs our support team. Would you like me to send this conversation to Comet customer support? They'll follow up on email.",
+      "That's a bit outside what I can answer confidently — I don't want to guess. Shall I send this to our support team? They'll pick it up on email.",
     category: 'unknown',
     offerEscalation: true,
     resolvable: false,

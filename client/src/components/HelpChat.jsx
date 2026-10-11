@@ -56,18 +56,24 @@ export default function HelpChat({ open, onClose, user, onLogin }) {
     const userMsg = { from: 'user', text: msg, image: image || undefined };
     push(userMsg);
     setSending(true);
+    // Give the bot a natural "thinking" beat — the dots stay visible
+    // for a minimum time instead of the reply flashing in instantly.
+    const minDelay = new Promise((r) => setTimeout(r, 1400));
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: msg,
-          product,
-          email: user?.email,
-          image,
-          history: [...messages, userMsg].slice(-10),
+      const [res] = await Promise.all([
+        fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: msg,
+            product,
+            email: user?.email,
+            image,
+            history: [...messages, userMsg].slice(-10),
+          }),
         }),
-      });
+        minDelay,
+      ]);
       const data = await res.json();
       push({ from: 'bot', text: data.reply, followUp: data.followUp });
       setLastCategory(data.category || null);
