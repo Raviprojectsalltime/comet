@@ -22,7 +22,7 @@ const INTENTS = [
   { id: 'water-damage', re: /wet|water|rain|soak|drench|puddle|damp|moist/i },
   { id: 'mould-fungus', re: /fungus|mould|mold|mildew|smell|odou?r|green.*patch|white.*substance/i },
   { id: 'cleaning', re: /clean|wash|detergent|dirty|stain|scrub|soap|machine/i },
-  { id: 'color-fading', re: /fad(e|ing)|colou?r.*(bleed|chang|fading)|bleed|discolou?r|patch|white marks?/i },
+  { id: 'color-fading', re: /fad(e|ing|ed)|colou?r.*(bleed|chang|fad|los|run|come off|wash)|los(e|ing|t).*(colou?r|dye)|bleed|discolou?r|patch(es)?|white marks?/i },
   { id: 'material-texture', re: /rough|smooth|texture|peel|hard|stiff|material|surface|fabric feel/i },
   { id: 'sole-structure', re: /sole|stitch|crack|separat|came off|detach|shape.*chang|glue/i },
   { id: 'fit-size', re: /tight|fit|size|sizing|hurt|uncomfort|loose|too (small|big|narrow|wide)|pain/i },
