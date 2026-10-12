@@ -134,7 +134,14 @@ app.post('/api/auth/login', async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
-  if (!supabase) return res.status(503).json({ error: 'Auth not configured' });
+  if (!supabase) {
+    // Demo fallback so the deployed demo site always logs in even
+    // before Supabase env vars are set on the host.
+    if (email === 'ravi@gmail.com' && password === 'Ravi@123') {
+      return res.json({ user: { id: 'demo-ravi', email }, session: null });
+    }
+    return res.status(503).json({ error: 'Auth not configured' });
+  }
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return res.status(401).json({ error: 'Invalid email or password' });
   res.json({

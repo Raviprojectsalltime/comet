@@ -38,6 +38,27 @@ export default function App() {
       .then((r) => r.json())
       .then((d) => setProducts(Array.isArray(d) ? d : []))
       .catch(() => setProducts([]));
+
+    // Universal demo login — every visitor is signed in as ravi@gmail.com
+    // so orders/chat context always exist.
+    if (!user) {
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'ravi@gmail.com', password: 'Ravi@123' }),
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          const u = d.user || { email: 'ravi@gmail.com' };
+          setUser(u);
+          localStorage.setItem('comet_user', JSON.stringify(u));
+        })
+        .catch(() => {
+          const u = { email: 'ravi@gmail.com' };
+          setUser(u);
+          localStorage.setItem('comet_user', JSON.stringify(u));
+        });
+    }
   }, []);
 
   const showToast = (msg) => {
