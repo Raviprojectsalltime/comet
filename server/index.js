@@ -8,10 +8,16 @@ import { llmReply, llmText } from './ai.js';
 import { sendSupportEmail } from './email.js';
 import productsJson from './products.json' with { type: 'json' };
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// __dirname exists natively when bundled to CJS (Netlify functions);
+// fall back to import.meta.url for local ESM runs. Named differently
+// to avoid shadowing/TDZ issues in the bundled output.
+const serverDir =
+  typeof __dirname === 'string'
+    ? __dirname
+    : path.dirname(fileURLToPath(import.meta.url));
 
 // Minimal .env loader (no dependency)
-const envPath = path.join(__dirname, '.env');
+const envPath = path.join(serverDir, '.env');
 if (fs.existsSync(envPath)) {
   for (const line of fs.readFileSync(envPath, 'utf-8').split('\n')) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
@@ -521,7 +527,7 @@ app.get('/api/health/supabase', async (_req, res) => {
 });
 
 // In production, serve the built React app.
-const distDir = path.join(__dirname, '..', 'client', 'dist');
+const distDir = path.join(serverDir, '..', 'client', 'dist');
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir));
   app.get('*', (_req, res) => res.sendFile(path.join(distDir, 'index.html')));

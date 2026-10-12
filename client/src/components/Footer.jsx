@@ -68,7 +68,7 @@ export default function Footer() {
               <span><small>Download on the</small>App Store</span>
             </a>
             <a className="store-badge" href="https://www.wearcomet.com/" target="_blank" rel="noreferrer">
-              <svg width="16" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3.6 2.3 13.7 12 3.6 21.7c-.36-.2-.6-.6-.6-1.1V3.4c0-.5.24-.9.6-1.1zm11.5 8.3L4.6 1.6l12.9 7.3-2.4 1.7zm2.4 1.7-2.4 1.7 2.4 1.7 2.4-1.5c.9-.5.9-1.4 0-1.9l-2.4-.1zM4.6 22.4l10.5-9 2.4 1.7-12.9 7.3z"/></svg>
+              <svg width="20" height="20" viewBox="0 0 512 512"><path d="M325.3 234.3 104.6 13l280.8 161.3-60.1 60z" fill="#FF4444"/><path d="M47 0C34 6.8 25.3 19.2 25.3 35.3v441.4c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0z" fill="#00D2FF"/><path d="M472.2 225.6l-58.9-41.2-84.9 50.4 84.9 50.4 58.9-41.2c15.2-8.5 15.2-30.5 0-38.4z" fill="#FFBE00"/><path d="M104.6 499l280.8-161.2-60.1-60.1L104.6 499z" fill="#00F076"/></svg>
               <span><small>Get it on</small>Google Play</span>
             </a>
           </div>
