@@ -7,6 +7,7 @@ import { answer, buildEscalationEmail, setArticles, getArticles } from './chat.j
 import { llmReply, llmText } from './ai.js';
 import { sendSupportEmail } from './email.js';
 import productsJson from './products.json' with { type: 'json' };
+import opsDataJson from './ops-data.json' with { type: 'json' };
 
 // __dirname exists natively when bundled to CJS (Netlify functions);
 // fall back to import.meta.url for local ESM runs. Named differently
@@ -337,13 +338,23 @@ const OPS_TABLES = ['ops_orders', 'ops_shipments', 'ops_batches', 'ops_inventory
 // AI-generated stakeholder insights — computes real metrics from the
 // ops tables and has the LLM phrase them; falls back to templates.
 app.get('/api/ops/insights', async (_req, res) => {
-  if (!supabase) return res.json({ insights: [], source: 'none' });
   try {
-    const [o, s, b, inv, ret, ref] = await Promise.all(
-      OPS_TABLES.map((t) => supabase.from(t).select('*').limit(1000))
-    );
-    const orders = o.data || [], shipments = s.data || [], batches = b.data || [];
-    const inventory = inv.data || [], returns = ret.data || [], refunds = ref.data || [];
+    let orders, shipments, batches, inventory, returns, refunds;
+    if (supabase) {
+      const [o, s, b, inv, ret, ref] = await Promise.all(
+        OPS_TABLES.map((t) => supabase.from(t).select('*').limit(1000))
+      );
+      orders = o.data?.length ? o.data : opsDataJson.ops_orders;
+      shipments = s.data?.length ? s.data : opsDataJson.ops_shipments;
+      batches = b.data?.length ? b.data : opsDataJson.ops_batches;
+      inventory = inv.data?.length ? inv.data : opsDataJson.ops_inventory;
+      returns = ret.data?.length ? ret.data : opsDataJson.ops_returns;
+      refunds = ref.data?.length ? ref.data : opsDataJson.ops_refunds;
+    } else {
+      orders = opsDataJson.ops_orders; shipments = opsDataJson.ops_shipments;
+      batches = opsDataJson.ops_batches; inventory = opsDataJson.ops_inventory;
+      returns = opsDataJson.ops_returns; refunds = opsDataJson.ops_refunds;
+    }
 
     const week = (d0, d1) => orders.filter((x) => {
       const t = new Date(x.order_date);
@@ -409,17 +420,21 @@ function fmtI(n) { return Number(n || 0).toLocaleString('en-IN'); }
 app.get('/api/ops/:table', async (req, res) => {
   const table = req.params.table;
   if (!OPS_TABLES.includes(table)) return res.status(404).json({ error: 'unknown ops table' });
-  if (!supabase) return res.json([]);
+  // Bundled snapshot fallback keeps the demo dashboard populated when
+  // Supabase env vars aren't configured on the host.
+  const fallback = () =>
+    res.json(opsDataJson[table] || []);
+  if (!supabase) return fallback();
   try {
     let q = supabase.from(table).select('*').limit(1000);
     if (table === 'ops_orders') q = q.order('order_date', { ascending: false });
     if (table === 'ops_returns' || table === 'ops_refunds') q = q.order('request_date', { ascending: false });
     const { data, error } = await q;
     if (error) throw error;
-    res.json(data || []);
+    res.json(data?.length ? data : opsDataJson[table] || []);
   } catch (e) {
     if (!isMissingTable(e)) console.error(`Ops fetch ${table}:`, e.message);
-    res.json([]);
+    fallback();
   }
 });
 
