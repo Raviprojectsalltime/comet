@@ -8,6 +8,7 @@ import { llmReply, llmText } from './ai.js';
 import { sendSupportEmail } from './email.js';
 import productsJson from './products.json' with { type: 'json' };
 import opsDataJson from './ops-data.json' with { type: 'json' };
+import ordersDataJson from './orders-data.json' with { type: 'json' };
 
 // __dirname exists natively when bundled to CJS (Netlify functions);
 // fall back to import.meta.url for local ESM runs. Named differently
@@ -493,7 +494,11 @@ app.get('/api/tickets', async (req, res) => {
 // never rely on AI-generated details.
 app.get('/api/orders', async (req, res) => {
   const email = String(req.query.email || '').trim();
-  if (!email || !supabase) return res.json([]);
+  if (!email) return res.json([]);
+  // Bundled demo orders keep the chatbot's purchased-products row
+  // populated on hosts without Supabase env vars.
+  const fallback = ordersDataJson[email] || [];
+  if (!supabase) return res.json(fallback);
   try {
     const { data, error } = await supabase
       .from('orders')
@@ -528,7 +533,7 @@ app.get('/api/orders', async (req, res) => {
     );
   } catch (e) {
     if (!isMissingTable(e)) console.error('Orders fetch error:', e.message);
-    res.json([]);
+    res.json(fallback);
   }
 });
 
