@@ -1256,9 +1256,9 @@ a {
 /* ---------- Help / chat widget ---------- */
 .chat-panel {
   position: fixed;
-  bottom: 92px;
+  bottom: 150px;
   right: 24px;
-  z-index: 150;
+  z-index: 9999;
   width: 360px;
   max-width: calc(100vw - 32px);
   height: 480px;
@@ -2547,7 +2547,7 @@ a {
   .chat-panel {
     left: 8px;
     right: 8px;
-    bottom: 76px;
+    bottom: 120px;
     width: auto;
     max-width: none;
     height: 72vh;
